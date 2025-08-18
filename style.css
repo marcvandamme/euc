@@ -1,100 +1,115 @@
 body {
-    background-color: #121212;
-    color: #e0e0e0;
     font-family: Arial, sans-serif;
+    background-color: #121212; /* Mørk baggrund */
+    color: #e0e0e0; /* Lys tekstfarve */
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    justify-content: center;
+    align-items: center;
     min-height: 100vh;
     margin: 0;
 }
 
 .calculator-container {
-    background-color: #1e1e1e;
-    padding: 30px;
+    background-color: #1e1e1e; /* Mørkere containerbaggrund */
+    padding: 2rem;
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-    width: 90%;
-    max-width: 500px;
-    margin: 40px auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    width: 100%;
+    max-width: 450px;
+    text-align: center;
 }
 
-h1 {
-    color: #ffffff;
-    text-align: center;
-    margin-bottom: 20px;
+h2 {
+    color: #ffffff; /* Hvid overskrift */
+    margin-top: 0;
+    margin-bottom: 1.5rem;
 }
 
-p {
-    text-align: center;
-    color: #b0b0b0;
+.circuit-type {
+    margin-bottom: 1.5rem;
+}
+
+.circuit-type label {
+    font-weight: bold;
+    color: #bbbbbb;
+    margin-right: 10px;
+}
+
+.circuit-type select {
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #333;
+    background-color: #2b2b2b;
+    color: #e0e0e0;
+    font-size: 1rem;
 }
 
 .input-group {
-    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 1rem;
 }
 
 .input-group label {
-    display: block;
-    margin-bottom: 5px;
-    color: #e0e0e0;
+    font-weight: bold;
+    color: #bbbbbb;
+    margin-bottom: 0.5rem;
 }
 
-.input-group input[type="text"] {
+.input-group input {
     width: 100%;
     padding: 10px;
     border: 1px solid #333;
-    background-color: #2b2b2b;
-    color: #ffffff;
     border-radius: 5px;
+    background-color: #2b2b2b;
+    color: #e0e0e0;
+    font-size: 1rem;
     box-sizing: border-box;
 }
 
 .button-group {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 20px;
+    justify-content: space-between; /* Fordeler knapperne jævnt */
+    margin-top: 1.5rem;
 }
 
-.button-group button, .reset-button {
-    padding: 12px;
-    background-color: #007acc;
-    color: #ffffff;
+.button-group button {
+    padding: 12px 24px;
+    font-size: 1rem;
+    color: #fff;
     border: none;
     border-radius: 5px;
-    font-size: 16px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    flex: 1; /* Gør knapperne lige store */
+    margin: 0 5px; /* Skaber mellemrum mellem knapperne */
 }
 
-.button-group button:hover, .reset-button:hover {
-    background-color: #005f99;
+#calculate-button {
+    background-color: #007bff; /* Blå farve */
 }
 
-.result-box {
-    margin-top: 20px;
-    padding: 15px;
+#calculate-button:hover {
+    background-color: #0056b3;
+}
+
+#reset-button {
+    background-color: #6c757d; /* Grå farve */
+}
+
+#reset-button:hover {
+    background-color: #5a6268;
+}
+
+#result {
     background-color: #2b2b2b;
     border: 1px solid #333;
     border-radius: 5px;
+    padding: 1rem;
+    margin-top: 1.5rem;
+    text-align: left;
     white-space: pre-wrap;
-    word-wrap: break-word;
+    font-size: 0.9rem;
     color: #e0e0e0;
-}
-
-.result-box h3 {
-    color: #ffffff;
-}
-
-.reset-button {
-    width: 100%;
-    margin-bottom: 20px;
-}
-
-footer {
-    text-align: center;
-    padding: 10px;
-    color: #e0e0e0;
-    font-size: 0.8em;
 }
