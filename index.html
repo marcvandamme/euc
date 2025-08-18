@@ -9,6 +9,18 @@
 <body>
     <div class="calculator-container">
         <h1>RLC Lommeregner</h1>
+        
+        <div class="help-section">
+            <h2>Vejledning til input</h2>
+            <p>
+                Lommeregneren accepterer standardværdier med forstavelser (fx **k, m, µ, n, p**). For at indtaste reaktans direkte, skal du tilføje et bogstav efter tallet.
+            </p>
+            <ul>
+                <li>**Kapacitiv reaktans Xc** 👉 Indtast **<code>200c</code>** i feltet for Kapacitans.</li>
+                <li>**Induktiv reaktans Xl** 👉 Indtast **<code>120l</code>** i feltet for Induktans.</li>
+            </ul>
+        </div>
+
         <div class="input-section">
             <div class="input-group">
                 <label for="circuit-select">Vælg Kredsløb:</label>
@@ -18,46 +30,33 @@
                 </select>
             </div>
             <div class="input-group">
-                <label for="voltage">Spænding (V):</label>
+                <label for="voltage">Spænding (U) [V]:</label>
                 <input type="text" id="voltage" placeholder="fx 300">
             </div>
             <div class="input-group">
-                <label for="frequency">Frekvens (Hz):</label>
+                <label for="frequency">Frekvens (f) [Hz]:</label>
                 <input type="text" id="frequency" placeholder="fx 50">
             </div>
             <div class="input-group">
-                <label for="resistance">Modstand (Ω):</label>
+                <label for="resistance">Modstand (R) [Ω]:</label>
                 <input type="text" id="resistance" placeholder="fx 75">
             </div>
             <div class="input-group">
-                <label for="capacitance">Kapacitans (F):</label>
-                <input type="text" id="capacitance" placeholder="fx 200c for Xc">
+                <label for="capacitance">Kapacitans (C) eller $X_C$ [F/Ω]:</label>
+                <input type="text" id="capacitance" placeholder="fx 416u eller 200c">
             </div>
             <div class="input-group">
-                <label for="inductance">Induktans (H):</label>
-                <input type="text" id="inductance" placeholder="fx 120l for Xl">
+                <label for="inductance">Induktans (L) eller $X_L$ [H/Ω]:</label>
+                <input type="text" id="inductance" placeholder="fx 2.5m eller 120l">
             </div>
         </div>
+        
         <div class="button-group">
             <button id="calculate-button">Beregn</button>
             <button id="reset-button">Nulstil</button>
         </div>
         <pre id="result">Dine resultater vil blive vist her...</pre>
-
-        <div class="help-section">
-            <h2>Vejledning til input</h2>
-            <p>
-                Lommeregneren accepterer standardværdier med forstavelser. Du kan også direkte indtaste reaktanser ved at tilføje et bogstav efter tallet.
-            </p>
-            <ul>
-                <li>For at indtaste **kapacitiv reaktans ($X_C$)**, tilføj et lille **c** efter tallet. <strong>Eksempel: <code>200c</code></strong></li>
-                <li>For at indtaste **induktiv reaktans ($X_L$)**, tilføj et lille **l** efter tallet. <strong>Eksempel: <code>120l</code></strong></li>
-                <li>Du kan også bruge almindelige præfikser som **k, m, µ, n, p**. <strong>Eksempel: <code>100kΩ</code></strong> for 100 kΩ.</li>
-            </ul>
-        </div>
     </div>
     <script src="scripts.js"></script>
 </body>
 </html>
-
-
