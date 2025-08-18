@@ -6,25 +6,27 @@
  * The core code was developed collaboratively with Gemini, a large language model from Google.
  */
 
-// Funktion til at parse en værdi med enhed (k, M, m, u, n, p, l for XL)
+// Funktion til at parse en værdi med enhed (k, M, m, u, n, p, l for XL, c for XC)
 function parseValue(input) {
-    if (!input) return { value: 0, isReactance: false };
+    if (!input) return { value: 0, isLReactance: false, isCReactance: false };
     
     const rawValue = input.trim().toLowerCase();
     
     const isLReactance = rawValue.endsWith('l');
     const isCReactance = rawValue.endsWith('c');
     
+    // Fjern enhedsbogstavet, hvis det er en reaktans-enhed
     const valueString = isLReactance || isCReactance ? rawValue.slice(0, -1) : rawValue;
     const value = parseFloat(valueString);
     const unit = rawValue.slice(value.toString().length).trim();
 
     if (isNaN(value)) {
-        return { value: 0, isReactance: false, isCReactance: false };
+        return { value: 0, isLReactance: false, isCReactance: false };
     }
 
     let parsedValue = value;
     
+    // Håndter SI-præfikser
     switch (unit.replace('l', '').replace('c', '')) {
         case 'k': // Kilo
             parsedValue *= 1e3;
@@ -45,7 +47,7 @@ function parseValue(input) {
             break;
     }
     
-    return { value: parsedValue, isReactance: isLReactance, isCReactance: isCReactance };
+    return { value: parsedValue, isLReactance: isLReactance, isCReactance: isCReactance };
 }
 
 // Opdateret funktion til at formatere et tal med enheder (H, F, Ω, osv.)
@@ -129,7 +131,7 @@ function getValues() {
         capacitance: capacitanceResult.value,
         inductance: inductanceResult.value,
         frequency,
-        isLReactance: inductanceResult.isReactance,
+        isLReactance: inductanceResult.isLReactance,
         isCReactance: capacitanceResult.isCReactance
     };
 }
