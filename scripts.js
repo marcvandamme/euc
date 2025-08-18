@@ -10,10 +10,14 @@
 function parseValue(input) {
     if (!input) return { value: 0, isReactance: false };
     
-    const rawValue = input.trim();
-    const value = parseFloat(rawValue);
-    const unit = rawValue.slice(value.toString().length).toLowerCase().trim();
-    const isLReactance = unit === 'l'; // Korrigeret: Tjekker nu for eksakt 'l'
+    const rawValue = input.trim().toLowerCase();
+    
+    // Tjekker specifikt om inputtet slutter med 'l' for at indikere XL
+    const isLReactance = rawValue.endsWith('l');
+    
+    const valueString = isLReactance ? rawValue.slice(0, -1) : rawValue;
+    const value = parseFloat(valueString);
+    const unit = rawValue.slice(value.toString().length).trim();
 
     if (isNaN(value)) {
         return { value: 0, isReactance: false };
@@ -22,7 +26,7 @@ function parseValue(input) {
     let parsedValue = value;
     
     // Tjekker for standard SI-præfikser
-    switch (unit) {
+    switch (unit.replace('l', '')) {
         case 'k': // Kilo
             parsedValue *= 1e3;
             break;
