@@ -163,13 +163,18 @@ function calculateSeriesRLC() {
     resultOutput += `Induktans (L): ${isLReactance ? `${formatValue(inductance, 'Ω')} (Xl)` : formatValue(inductance, 'H')}\n`;
     resultOutput += `Frekvens (f): ${formatValue(frequency, 'Hz')}\n\n`;
     
-    resultOutput += `Formler brugt:\n`;
-    resultOutput += `•  **Kapacitiv reaktans:** Xc = ${isCReactance ? 'Givet' : '1 / (2π * f * C)'}\n`;
-    resultOutput += `•  **Induktiv reaktans:** Xl = ${isLReactance ? 'Givet' : '2π * f * L'}\n`;
-    resultOutput += `•  **Total impedans:** Z = √(R² + (Xl - Xc)²)\n`;
-    resultOutput += `•  **Total strøm:** I = U / Z\n`;
-    resultOutput += `•  **Spændingsfald:** Ur = I * R, Ul = I * Xl, Uc = I * Xc\n`;
-    resultOutput += `•  **Fasevinkel:** φ = arctan((Xl - Xc) / R)\n\n`;
+    resultOutput += `**Formler brugt i rækkefølge:**\n\n`;
+    resultOutput += `1. **Beregning af reaktans:** Før vi kan finde den totale modstand, skal vi kende reaktansen for spolen og kondensatoren. Deres modstand afhænger af frekvensen og komponentens værdi.\n`;
+    resultOutput += `   •  Kapacitiv reaktans: Xc = ${isCReactance ? 'Givet' : '1 / (2π * f * C)'}\n`;
+    resultOutput += `   •  Induktiv reaktans: Xl = ${isLReactance ? 'Givet' : '2π * f * L'}\n\n`;
+    resultOutput += `2. **Beregning af total impedans:** I et seriekredsløb er den totale modstand (impedans) den vektorielle sum af den ohmske modstand og reaktansen. Dette er et afgørende skridt for at finde den totale strøm.\n`;
+    resultOutput += `   •  Z = √(R² + (Xl - Xc)²)\n\n`;
+    resultOutput += `3. **Beregning af total strøm:** Når den totale impedans er kendt, kan vi finde den totale strøm ved at bruge Ohms lov for hele kredsløbet.\n`;
+    resultOutput += `   •  I = U / Z\n\n`;
+    resultOutput += `4. **Beregning af spændingsfald:** Når den totale strøm er kendt, kan vi finde spændingsfaldet over hver komponent ved at bruge Ohms lov for hver komponent individuelt.\n`;
+    resultOutput += `   •  Ur = I * R, Ul = I * Xl, Uc = I * Xc\n\n`;
+    resultOutput += `5. **Beregning af fasevinkel:** Faseforskydningen mellem strøm og spænding viser kredsløbets type (induktiv eller kapacitiv).\n`;
+    resultOutput += `   •  φ = arctan((Xl - Xc) / R)\n\n`;
 
     resultOutput += `Beregnet reaktans og spændingsfald:\n`;
     resultOutput += `•  Kapacitiv reaktans (Xc): ${formatValue(xC, 'Ω')}\n`;
@@ -234,13 +239,19 @@ function calculateParallelRLC() {
     resultOutput += `Induktans (L): ${isLReactance ? `${formatValue(inductance, 'Ω')} (Xl)` : formatValue(inductance, 'H')}\n`;
     resultOutput += `Frekvens (f): ${formatValue(frequency, 'Hz')}\n\n`;
 
-    resultOutput += `Formler brugt (Strøm-metoden):\n`;
-    resultOutput += `•  **Kapacitiv reaktans:** Xc = ${isCReactance ? 'Givet' : '1 / (2π * f * C)'}\n`;
-    resultOutput += `•  **Induktiv reaktans:** Xl = ${isLReactance ? 'Givet' : '2π * f * L'}\n`;
-    resultOutput += `•  **Strømme:** Ir = U / R, Ic = U / Xc, Il = U / Xl\n`;
-    resultOutput += `•  **Total strøm:** I(total) = √(Ir² + (Ic - Il)²)\n`;
-    resultOutput += `•  **Total impedans:** Z = U / I(total)\n`;
-    resultOutput += `•  **Fasevinkel:** φ = arctan((Ic - Il) / Ir)\n\n`;
+    resultOutput += `**Formler brugt i rækkefølge:**\n\n`;
+    resultOutput += `1. **Beregning af reaktans:** Først skal vi kende reaktansen for spolen og kondensatoren. Deres modstand afhænger af frekvensen og komponentens værdi.\n`;
+    resultOutput += `   •  Kapacitiv reaktans: Xc = ${isCReactance ? 'Givet' : '1 / (2π * f * C)'}\n`;
+    resultOutput += `   •  Induktiv reaktans: Xl = ${isLReactance ? 'Givet' : '2π * f * L'}\n\n`;
+    resultOutput += `2. **Beregning af strømme:** I et parallelkredsløb er spændingen den samme over alle komponenter. Derfor beregner vi strømmen i hver enkelt gren ved hjælp af Ohms lov.\n`;
+    resultOutput += `   •  Strøm gennem R: Ir = U / R\n`;
+    resultOutput += `   •  Strøm gennem C: Ic = U / Xc\n`;
+    resultOutput += `   •  Strøm gennem L: Il = U / Xl\n\n`;
+    resultOutput += `3. **Beregning af total strøm og impedans:** Den totale strøm er den vektorielle sum af strømmene i grenene. Strømmen gennem modstanden ($I_R$) er i fase, mens $I_L$ og $I_C$ er $90^\circ$ faseforskudte. Vi bruger den samlede strøm til at finde den totale impedans.\n`;
+    resultOutput += `   •  Total strøm: I(total) = √(Ir² + (Ic - Il)²)\n`;
+    resultOutput += `   •  Total impedans: Z = U / I(total)\n\n`;
+    resultOutput += `4. **Beregning af fasevinkel:** Faseforskydningen mellem total strøm og spænding viser, om kredsløbet er induktivt eller kapacitivt.\n`;
+    resultOutput += `   •  φ = arctan((Ic - Il) / Ir)\n\n`;
     
     resultOutput += `Beregnet reaktans og delstrømme:\n`;
     resultOutput += `•  Kapacitiv reaktans (Xc): ${formatValue(xC, 'Ω')}\n`;
