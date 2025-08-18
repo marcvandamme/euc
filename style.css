@@ -588,7 +588,7 @@ function calculateParallelRL() {
     resultOutput += `Beregnet reaktans og strømme:\n`;
     resultOutput += `•  Induktiv reaktans (Xl): ${formatValue(xL, 'Ω')}\n`;
     resultOutput += `•  Strøm gennem R (Ir): ${formatValue(iR, 'A')}\n`;
-Output += `•  Strøm gennem L (Il): ${formatValue(iL, 'A')}\n\n`;
+    resultOutput += `•  Strøm gennem L (Il): ${formatValue(iL, 'A')}\n\n`;
 
     resultOutput += `Endelige resultater:\n`;
     resultOutput += `•  Total impedans (Z): ${formatValue(zTotal, 'Ω')}\n`;
