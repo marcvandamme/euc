@@ -171,9 +171,11 @@ function calculateSeriesRLC() {
         else { phaseAngleDeg = 0; }
     }
 
+    // Nye beregninger for effekt og spændingsfald
     const realPower = current * current * resistance;
+    const apparentPower = voltage * current;
+    const reactivePower = Math.abs(current * current * (xL - xC));
 
-    // Beregning af spændingsfald i seriekredsløb
     const uR = current * resistance;
     const uL = current * xL;
     const uC = current * xC;
@@ -211,6 +213,8 @@ function calculateSeriesRLC() {
     resultOutput += `•  Faseforskydningsvinkel (φ): ${phaseAngleDeg.toFixed(3)} °\n`;
     resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
     resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
+    resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
+    resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
 
     document.getElementById('result').textContent = resultOutput;
 }
@@ -247,8 +251,10 @@ function calculateParallelRLC() {
         else { phaseAngleDeg = 0; }
     }
     
-    const realPower = voltage * totalCurrent * powerFactor;
-
+    // Nye beregninger for effekt
+    const realPower = voltage * iR;
+    const apparentPower = voltage * totalCurrent;
+    const reactivePower = Math.abs(voltage * (iC - iL));
 
     resultOutput += `--- Parallel Kredsløb ---\n\n`;
     resultOutput += `Indtastede værdier:\n`;
@@ -279,6 +285,8 @@ function calculateParallelRLC() {
     resultOutput += `•  Faseforskydningsvinkel (φ): ${phaseAngleDeg.toFixed(3)} °\n`;
     resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
     resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
+    resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
+    resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
 
     document.getElementById('result').textContent = resultOutput;
 }
@@ -328,7 +336,10 @@ function calculateCapacitance() {
     }
     phaseAngleDeg = Math.acos(powerFactor) * (180 / Math.PI);
     
+    // Nye beregninger for effekt
     const realPower = U * I * powerFactor;
+    const apparentPower = U * I;
+    const reactivePower = Math.abs(U * I * Math.sin(phaseAngleDeg * Math.PI / 180));
 
     resultOutput += `--- Beregn Kapacitans (C) - ud fra U, I, R og f ---\n\n`;
     resultOutput += `Indtastede værdier:\n`;
@@ -355,6 +366,8 @@ function calculateCapacitance() {
     resultOutput += `•  Faseforskydningsvinkel (φ): ${phaseAngleDeg.toFixed(3)} °\n`;
     resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
     resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
+    resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
+    resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
 
     document.getElementById('result').textContent = resultOutput;
 }
@@ -404,6 +417,11 @@ function calculateInductance() {
     }
     phaseAngleDeg = Math.acos(powerFactor) * (180 / Math.PI);
 
+    // Nye beregninger for effekt
+    const realPower = U * I * powerFactor;
+    const apparentPower = U * I;
+    const reactivePower = Math.abs(U * I * Math.sin(phaseAngleDeg * Math.PI / 180));
+
     resultOutput += `--- Beregn Induktans (L) - ud fra U, I, R og f ---\n\n`;
     resultOutput += `Indtastede værdier:\n`;
     resultOutput += `Spænding (U): ${formatValue(U, 'V')}\n`;
@@ -427,6 +445,9 @@ function calculateInductance() {
     resultOutput += `•  Induktans i millihenry (mH): ${(L_beregnet * 1e3).toFixed(3)} mH\n`;
     resultOutput += `•  Faseforskydningsvinkel (φ): ${phaseAngleDeg.toFixed(3)} °\n`;
     resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
+    resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
+    resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
+    resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
 
     document.getElementById('result').textContent = resultOutput;
 }
@@ -483,6 +504,11 @@ function calculateFrequency() {
     }
     const phaseAngleDeg = Math.acos(powerFactor) * (180 / Math.PI);
     
+    // Nye beregninger for effekt
+    const realPower = U * I * powerFactor;
+    const apparentPower = U * I;
+    const reactivePower = Math.abs(U * I * Math.sin(phaseAngleDeg * Math.PI / 180));
+
     resultOutput += `--- Beregn Frekvens (f) for ${componentType} Kredsløb ---\n\n`;
     resultOutput += `Indtastede værdier:\n`;
     resultOutput += `Spænding (U): ${formatValue(U, 'V')}\n`;
@@ -505,6 +531,9 @@ function calculateFrequency() {
     resultOutput += `•  Frekvens (f): ${formatValue(frequency_calculated, 'Hz')}\n`;
     resultOutput += `•  Faseforskydningsvinkel (φ): ${phaseAngleDeg.toFixed(3)} °\n`;
     resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
+    resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
+    resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
+    resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
 
     document.getElementById('result').textContent = resultOutput;
 }
@@ -534,7 +563,11 @@ function calculateParallelRL() {
     // Beregning af fasevinkel og effektfaktor
     const powerFactor = iR / iTotal;
     const phaseAngleDeg = Math.atan(iL / iR) * (180 / Math.PI);
-    const realPower = voltage * iTotal * powerFactor;
+
+    // Nye beregninger for effekt
+    const realPower = voltage * iR;
+    const apparentPower = voltage * iTotal;
+    const reactivePower = Math.abs(voltage * iL);
 
     resultOutput += `--- Parallel RL Kredsløb ---\n\n`;
     resultOutput += `Indtastede værdier:\n`;
@@ -563,6 +596,8 @@ function calculateParallelRL() {
     resultOutput += `•  Faseforskydningsvinkel (φ): ${phaseAngleDeg.toFixed(3)} °\n`;
     resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
     resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
+    resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
+    resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
 
     document.getElementById('result').textContent = resultOutput;
 }
@@ -593,7 +628,11 @@ function calculateParallelRC() {
     const powerFactor = iR / iTotal;
     // Fasevinklen er negativ for et kapacitivt kredsløb
     const phaseAngleDeg = -Math.atan(iC / iR) * (180 / Math.PI);
-    const realPower = voltage * iTotal * powerFactor;
+
+    // Nye beregninger for effekt
+    const realPower = voltage * iR;
+    const apparentPower = voltage * iTotal;
+    const reactivePower = Math.abs(voltage * iC);
 
     resultOutput += `--- Parallel RC Kredsløb ---\n\n`;
     resultOutput += `Indtastede værdier:\n`;
@@ -622,6 +661,8 @@ function calculateParallelRC() {
     resultOutput += `•  Faseforskydningsvinkel (φ): ${phaseAngleDeg.toFixed(3)} °\n`;
     resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
     resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
+    resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
+    resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
 
     document.getElementById('result').textContent = resultOutput;
 }
@@ -662,7 +703,11 @@ function calculateParallelRLC_FromPower(power) {
     const powerFactor = i_total_real / totalCurrent;
     const phaseAngleRad = Math.atan(i_total_imaginary / i_total_real);
     const phaseAngleDeg = phaseAngleRad * (180 / Math.PI);
-    const realPower = voltage * totalCurrent * powerFactor;
+
+    // Nye beregninger for effekt
+    const realPower = voltage * iR;
+    const apparentPower = voltage * totalCurrent;
+    const reactivePower = Math.abs(voltage * i_total_imaginary);
 
     resultOutput += `--- Parallel RLC Kredsløb fra Nytteeffekt ---\n\n`;
     resultOutput += `Indtastede værdier:\n`;
@@ -678,7 +723,7 @@ function calculateParallelRLC_FromPower(power) {
     resultOutput += `•  **Delstrømme:** Ir = U / R, Il = U / Xl, Ic = U / Xc\n`;
     resultOutput += `•  **Total strøm:** I(total) = √(Ir² + (Ic - Il)²)\n`;
     resultOutput += `•  **Total impedans:** Z = U / I(total)\n`;
-Output += `•  **Fasevinkel:** φ = arctan((Ic - Il) / Ir)\n\n`;
+    resultOutput += `•  **Fasevinkel:** φ = arctan((Ic - Il) / Ir)\n\n`;
 
     resultOutput += `Beregnet modstand, reaktanser og delstrømme:\n`;
     resultOutput += `•  Beregnet modstand (R): ${formatValue(resistance, 'Ω')}\n`;
@@ -694,6 +739,8 @@ Output += `•  **Fasevinkel:** φ = arctan((Ic - Il) / Ir)\n\n`;
     resultOutput += `•  Faseforskydningsvinkel (φ): ${phaseAngleDeg.toFixed(3)} °\n`;
     resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
     resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
+    resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
+    resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
 
     document.getElementById('result').textContent = resultOutput;
 }
