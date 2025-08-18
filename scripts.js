@@ -79,6 +79,12 @@ function updateCalculator() {
     
     const selectedCircuitType = document.getElementById('circuit-select').value;
     
+    // Tjekker for et parallel RL-kredsløb ud fra de givne input
+    if (selectedCircuitType === 'parallel' && resistance > 0 && inductance > 0 && capacitance === 0) {
+        calculateParallelRL();
+        return;
+    }
+
     if (selectedCircuitType === 'series') {
         calculateSeriesRLC();
     } else if (selectedCircuitType === 'parallel') {
@@ -226,6 +232,135 @@ function calculateParallelRLC() {
     resultOutput += `Endelige resultater:\n`;
     resultOutput += `•  Total impedans (Z): ${impedanceStr}\n`;
     resultOutput += `•  Total strøm (I): ${formatValue(totalCurrent, 'A')}\n`;
+    resultOutput += `•  Faseforskydningsvinkel (φ): ${phaseAngleDeg.toFixed(3)} °\n`;
+    resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
+    resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
+    resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
+    resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
+
+    document.getElementById('result').textContent = resultOutput;
+}
+
+// Ny funktion for parallel RL kredsløb
+function calculateParallelRL() {
+    const { voltage, resistance, inductance, frequency } = getValues();
+    let resultOutput = '';
+
+    if (voltage <= 0 || resistance <= 0 || inductance <= 0 || frequency <= 0) {
+        resultOutput = "Fejl: Indtast venligst positive værdier for Spænding, Modstand, Induktans og Frekvens for at beregne parallel RL-kredsløb.";
+        document.getElementById('result').textContent = resultOutput;
+        return;
+    }
+
+    // Beregning af reaktans
+    const xL = 2 * Math.PI * frequency * inductance;
+
+    // Beregning af strømme
+    const iR = voltage / resistance;
+    const iL = voltage / xL;
+    const iTotal = Math.sqrt(Math.pow(iR, 2) + Math.pow(iL, 2));
+
+    // Beregning af total impedans
+    const zTotal = voltage / iTotal;
+
+    // Beregning af fasevinkel og effektfaktor
+    const powerFactor = iR / iTotal;
+    const phaseAngleDeg = Math.atan(iL / iR) * (180 / Math.PI);
+
+    // Nye beregninger for effekt
+    const realPower = voltage * iR;
+    const apparentPower = voltage * iTotal;
+    const reactivePower = Math.abs(voltage * iL);
+
+    resultOutput += `--- Parallel RL Kredsløb ---\n\n`;
+    resultOutput += `Indtastede værdier:\n`;
+    resultOutput += `Spænding (U): ${formatValue(voltage, 'V')}\n`;
+    resultOutput += `Modstand (R): ${formatValue(resistance, 'Ω')}\n`;
+    resultOutput += `Induktans (L): ${formatValue(inductance, 'H')}\n`;
+    resultOutput += `Frekvens (f): ${formatValue(frequency, 'Hz')}\n\n`;
+
+    resultOutput += `Formler brugt (Strøm-metoden):\n`;
+    resultOutput += `•  **Induktiv reaktans:** Xl = 2π * f * L\n`;
+    resultOutput += `•  **Strøm gennem R:** Ir = U / R\n`;
+    resultOutput += `•  **Strøm gennem L:** Il = U / Xl\n`;
+    resultOutput += `•  **Total strøm:** I(total) = √(Ir² + Il²)\n`;
+    resultOutput += `•  **Total impedans:** Z = U / I(total)\n`;
+    resultOutput += `•  **Fasevinkel:** φ = arctan(Il / Ir)\n\n`;
+
+
+    resultOutput += `Beregnet reaktans og strømme:\n`;
+    resultOutput += `•  Induktiv reaktans (Xl): ${formatValue(xL, 'Ω')}\n`;
+    resultOutput += `•  Strøm gennem R (Ir): ${formatValue(iR, 'A')}\n`;
+    resultOutput += `•  Strøm gennem L (Il): ${formatValue(iL, 'A')}\n\n`;
+
+    resultOutput += `Endelige resultater:\n`;
+    resultOutput += `•  Total impedans (Z): ${formatValue(zTotal, 'Ω')}\n`;
+    resultOutput += `•  Total strøm (I): ${formatValue(iTotal, 'A')}\n`;
+    resultOutput += `•  Faseforskydningsvinkel (φ): ${phaseAngleDeg.toFixed(3)} °\n`;
+    resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
+    resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
+    resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
+    resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
+
+    document.getElementById('result').textContent = resultOutput;
+}
+
+// Beregning for parallel RC kredsløb
+function calculateParallelRC() {
+    const { voltage, resistance, capacitance, frequency } = getValues();
+    let resultOutput = '';
+
+    if (voltage <= 0 || resistance <= 0 || capacitance <= 0 || frequency <= 0) {
+        resultOutput = "Fejl: Indtast venligst positive værdier for Spænding, Modstand, Kapacitans og Frekvens for at beregne parallel RC-kredsløb.";
+        document.getElementById('result').textContent = resultOutput;
+        return;
+    }
+
+    // Beregning af reaktans
+    const xC = 1 / (2 * Math.PI * frequency * capacitance);
+
+    // Beregning af strømme
+    const iR = voltage / resistance;
+    const iC = voltage / xC;
+    const iTotal = Math.sqrt(Math.pow(iR, 2) + Math.pow(iC, 2));
+
+    // Beregning af total impedans
+    const zTotal = voltage / iTotal;
+
+    // Beregning af fasevinkel og effektfaktor
+    const powerFactor = iR / iTotal;
+    // Fasevinklen er negativ for et kapacitivt kredsløb
+    const phaseAngleDeg = -Math.atan(iC / iR) * (180 / Math.PI);
+
+    // Nye beregninger for effekt
+    const realPower = voltage * iR;
+    const apparentPower = voltage * iTotal;
+    const reactivePower = Math.abs(voltage * iC);
+
+    resultOutput += `--- Parallel RC Kredsløb ---\n\n`;
+    resultOutput += `Indtastede værdier:\n`;
+    resultOutput += `Spænding (U): ${formatValue(voltage, 'V')}\n`;
+    resultOutput += `Modstand (R): ${formatValue(resistance, 'Ω')}\n`;
+    resultOutput += `Kapacitans (C): ${formatValue(capacitance, 'F')}\n`;
+    resultOutput += `Frekvens (f): ${formatValue(frequency, 'Hz')}\n\n`;
+
+    resultOutput += `Formler brugt (Strøm-metoden):\n`;
+    resultOutput += `•  **Kapacitiv reaktans:** Xc = 1 / (2π * f * C)\n`;
+    resultOutput += `•  **Strøm gennem R:** Ir = U / R\n`;
+    resultOutput += `•  **Strøm gennem C:** Ic = U / Xc\n`;
+    resultOutput += `•  **Total strøm:** I(total) = √(Ir² + Ic²)\n`;
+    resultOutput += `•  **Total impedans:** Z = U / I(total)\n`;
+    resultOutput += `•  **Fasevinkel:** φ = -arctan(Ic / Ir)\n\n`;
+
+
+    resultOutput += `Beregnet reaktans og strømme:\n`;
+    resultOutput += `•  Kapacitiv reaktans (Xc): ${formatValue(xC, 'Ω')}\n`;
+    resultOutput += `•  Strøm gennem R (Ir): ${formatValue(iR, 'A')}\n`;
+    resultOutput += `•  Strøm gennem C (Ic): ${formatValue(iC, 'A')}\n\n`;
+
+    resultOutput += `Endelige resultater:\n`;
+    resultOutput += `•  Total impedans (Z): ${formatValue(zTotal, 'Ω')}\n`;
+    resultOutput += `•  Total strøm (I): ${formatValue(iTotal, 'A')}\n`;
     resultOutput += `•  Faseforskydningsvinkel (φ): ${phaseAngleDeg.toFixed(3)} °\n`;
     resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
     resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
