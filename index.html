@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELICE Kredsløbsberegner</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="calculator-container">
+        <h1>ELICE Kredsløbsberegner</h1>
+        <p>Indtast de kendte værdier. Resultatet opdateres automatisk.</p>
+
+        <button onclick="resetCalculator()" class="reset-button">Nulstil</button>
+        
+        <div class="input-grid">
+            <div class="input-group">
+                <label for="voltage">Spænding (U) i Volt</label>
+                <input type="text" id="voltage" placeholder="fx 230">
+            </div>
+            <div class="input-group">
+                <label for="current">Strøm (I) i Ampere</label>
+                <input type="text" id="current" placeholder="fx 5">
+            </div>
+            <div class="input-group">
+                <label for="resistance">Modstand (R) i Ohm</label>
+                <input type="text" id="resistance" placeholder="fx 100">
+            </div>
+            <div class="input-group">
+                <label for="capacitance">Kapacitans (C) i Farad</label>
+                <input type="text" id="capacitance" placeholder="fx 470u">
+            </div>
+            <div class="input-group">
+                <label for="inductance">Induktans (L) i Henry</label>
+                <input type="text" id="inductance" placeholder="fx 15m">
+            </div>
+            <div class="input-group">
+                <label for="frequency">Frekvens (f) i Hertz</label>
+                <input type="text" id="frequency" placeholder="fx 50">
+            </div>
+        </div>
+
+        <div class="result-box" id="result">
+            <h3>Resultat</h3>
+            <pre>Dine resultater vil vises her...</pre>
+        </div>
+    </div>
+    
+    <footer>
+        Lavet af MGS
+    </footer>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
