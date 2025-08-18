@@ -6,20 +6,23 @@
  * The core code was developed collaboratively with Gemini, a large language model from Google.
  */
 
-// Funktion til at parse en værdi med enhed (k, M, m, u, n, p, Ω)
+// Funktion til at parse en værdi med enhed (k, M, m, u, n, p, L for XL)
 function parseValue(input) {
     if (!input) return { value: 0, isReactance: false };
     
-    const value = parseFloat(input);
-    const unit = input.slice(value.toString().length).toLowerCase().trim();
-    const isReactance = input.includes('Ω') || input.includes('ohm');
+    const rawValue = input.trim();
+    const value = parseFloat(rawValue);
+    const unit = rawValue.slice(value.toString().length).toLowerCase().trim();
+    const isLReactance = unit === 'l'; // Korrigeret: Tjekker nu for eksakt 'l'
 
     if (isNaN(value)) {
         return { value: 0, isReactance: false };
     }
 
     let parsedValue = value;
-    switch (unit.replace('ω', '').replace('ohm', '').trim()) {
+    
+    // Tjekker for standard SI-præfikser
+    switch (unit) {
         case 'k': // Kilo
             parsedValue *= 1e3;
             break;
@@ -40,7 +43,7 @@ function parseValue(input) {
             break;
     }
     
-    return { value: parsedValue, isReactance: isReactance };
+    return { value: parsedValue, isReactance: isLReactance };
 }
 
 // Funktion til at formatere et tal med enheder
