@@ -6,27 +6,26 @@
  * The core code was developed collaboratively with Gemini, a large language model from Google.
  */
 
-// Funktion til at parse en værdi med enhed (k, M, m, u, n, p, L for XL)
+// Funktion til at parse en værdi med enhed (k, M, m, u, n, p, l for XL)
 function parseValue(input) {
     if (!input) return { value: 0, isReactance: false };
     
     const rawValue = input.trim().toLowerCase();
     
-    // Tjekker specifikt om inputtet slutter med 'l' for at indikere XL
     const isLReactance = rawValue.endsWith('l');
+    const isCReactance = rawValue.endsWith('c');
     
-    const valueString = isLReactance ? rawValue.slice(0, -1) : rawValue;
+    const valueString = isLReactance || isCReactance ? rawValue.slice(0, -1) : rawValue;
     const value = parseFloat(valueString);
     const unit = rawValue.slice(value.toString().length).trim();
 
     if (isNaN(value)) {
-        return { value: 0, isReactance: false };
+        return { value: 0, isReactance: false, isCReactance: false };
     }
 
     let parsedValue = value;
     
-    // Tjekker for standard SI-præfikser
-    switch (unit.replace('l', '')) {
+    switch (unit.replace('l', '').replace('c', '')) {
         case 'k': // Kilo
             parsedValue *= 1e3;
             break;
@@ -43,34 +42,77 @@ function parseValue(input) {
             parsedValue *= 1e-12;
             break;
         default:
-            // Ingen enhed, værdi er som den er
             break;
     }
     
-    return { value: parsedValue, isReactance: isLReactance };
+    return { value: parsedValue, isReactance: isLReactance, isCReactance: isCReactance };
 }
 
-// Funktion til at formatere et tal med enheder
-function formatValue(value, unit) {
-    if (Math.abs(value) >= 1e9) {
-        return `${(value / 1e9).toFixed(3)} G${unit}`;
-    } else if (Math.abs(value) >= 1e6) {
-        return `${(value / 1e6).toFixed(3)} M${unit}`;
-    } else if (Math.abs(value) >= 1e3) {
-        return `${(value / 1e3).toFixed(3)} k${unit}`;
-    } else if (Math.abs(value) >= 1) {
-        return `${value.toFixed(3)} ${unit}`;
-    } else if (Math.abs(value) >= 1e-3) {
-        return `${(value / 1e-3).toFixed(3)} m${unit}`;
-    } else if (Math.abs(value) >= 1e-6) {
-        return `${(value / 1e-6).toFixed(3)} μ${unit}`;
-    } else if (Math.abs(value) >= 1e-9) {
-        return `${(value / 1e-9).toFixed(3)} n${unit}`;
-    } else if (Math.abs(value) >= 1e-12) {
-        return `${(value / 1e-12).toFixed(3)} p${unit}`;
-    } else {
-        return `${value.toFixed(3)} ${unit}`;
+// Opdateret funktion til at formatere et tal med enheder (H, F, Ω, osv.)
+function formatValue(value, unitType) {
+    let unit = '';
+    let suffix = '';
+
+    // Bestem enhedstype
+    switch(unitType) {
+        case 'V':
+            unit = 'V';
+            break;
+        case 'A':
+            unit = 'A';
+            break;
+        case 'Hz':
+            unit = 'Hz';
+            break;
+        case 'Ohm':
+            unit = 'Ω';
+            break;
+        case 'H':
+            unit = 'H';
+            break;
+        case 'F':
+            unit = 'F';
+            break;
+        case 'W':
+            unit = 'W';
+            break;
+        case 'VA':
+            unit = 'VA';
+            break;
+        case 'var':
+            unit = 'var';
+            break;
+        default:
+            unit = '';
+            break;
     }
+
+    if (Math.abs(value) >= 1e9) {
+        suffix = 'G';
+        value /= 1e9;
+    } else if (Math.abs(value) >= 1e6) {
+        suffix = 'M';
+        value /= 1e6;
+    } else if (Math.abs(value) >= 1e3) {
+        suffix = 'k';
+        value /= 1e3;
+    } else if (Math.abs(value) >= 1) {
+        // ingen præfiks
+    } else if (Math.abs(value) >= 1e-3) {
+        suffix = 'm';
+        value /= 1e-3;
+    } else if (Math.abs(value) >= 1e-6) {
+        suffix = 'μ';
+        value /= 1e-6;
+    } else if (Math.abs(value) >= 1e-9) {
+        suffix = 'n';
+        value /= 1e-9;
+    } else if (Math.abs(value) >= 1e-12) {
+        suffix = 'p';
+        value /= 1e-12;
+    }
+    
+    return `${value.toFixed(3)} ${suffix}${unit}`;
 }
 
 // Funktion til at læse værdier fra inputfelterne og kalde parseValue
@@ -88,7 +130,7 @@ function getValues() {
         inductance: inductanceResult.value,
         frequency,
         isLReactance: inductanceResult.isReactance,
-        isCReactance: capacitanceResult.isReactance
+        isCReactance: capacitanceResult.isCReactance
     };
 }
 
@@ -134,6 +176,9 @@ function calculateSeriesRLC() {
     const xL = isLReactance ? inductance : (inductance > 0 && frequency > 0 ? 2 * Math.PI * frequency * inductance : 0);
     const xC = isCReactance ? capacitance : (capacitance > 0 && frequency > 0 ? 1 / (2 * Math.PI * frequency * capacitance) : 0);
 
+    const L = isLReactance ? xL / (2 * Math.PI * frequency) : inductance;
+    const C = isCReactance ? 1 / (2 * Math.PI * frequency * xC) : capacitance;
+    
     const impedance = Math.sqrt(resistance * resistance + Math.pow(xL - xC, 2));
     const current = voltage > 0 && impedance > 0 ? voltage / impedance : 0;
 
@@ -158,9 +203,9 @@ function calculateSeriesRLC() {
     resultOutput += `--- Serie Kredsløb ---\n\n`;
     resultOutput += `Indtastede værdier:\n`;
     resultOutput += `Spænding (U): ${formatValue(voltage, 'V')}\n`;
-    resultOutput += `Modstand (R): ${formatValue(resistance, 'Ω')}\n`;
-    resultOutput += `Kapacitans (C): ${isCReactance ? `${formatValue(capacitance, 'Ω')} (Xc)` : formatValue(capacitance, 'F')}\n`;
-    resultOutput += `Induktans (L): ${isLReactance ? `${formatValue(inductance, 'Ω')} (Xl)` : formatValue(inductance, 'H')}\n`;
+    resultOutput += `Modstand (R): ${formatValue(resistance, 'Ohm')}\n`;
+    resultOutput += `Kapacitans (C): ${isCReactance ? `${formatValue(capacitance, 'Ohm')} (Xc)` : formatValue(capacitance, 'F')}\n`;
+    resultOutput += `Induktans (L): ${isLReactance ? `${formatValue(inductance, 'Ohm')} (Xl)` : formatValue(inductance, 'H')}\n`;
     resultOutput += `Frekvens (f): ${formatValue(frequency, 'Hz')}\n\n`;
     
     resultOutput += `**Formler brugt i rækkefølge:**\n\n`;
@@ -177,20 +222,28 @@ function calculateSeriesRLC() {
     resultOutput += `   •  φ = arctan((Xl - Xc) / R)\n\n`;
 
     resultOutput += `Beregnet reaktans og spændingsfald:\n`;
-    resultOutput += `•  Kapacitiv reaktans (Xc): ${formatValue(xC, 'Ω')}\n`;
-    resultOutput += `•  Induktiv reaktans (Xl): ${formatValue(xL, 'Ω')}\n`;
+    resultOutput += `•  Kapacitiv reaktans (Xc): ${formatValue(xC, 'Ohm')}\n`;
+    resultOutput += `•  Induktiv reaktans (Xl): ${formatValue(xL, 'Ohm')}\n`;
     resultOutput += `•  Spændingsfald over R (Ur): ${formatValue(uR, 'V')}\n`;
     resultOutput += `•  Spændingsfald over L (Ul): ${formatValue(uL, 'V')}\n`;
     resultOutput += `•  Spændingsfald over C (Uc): ${formatValue(uC, 'V')}\n\n`;
     
     resultOutput += `Endelige resultater:\n`;
-    resultOutput += `•  Total impedans (Z): ${formatValue(impedance, 'Ω')}\n`;
+    resultOutput += `•  Total impedans (Z): ${formatValue(impedance, 'Ohm')}\n`;
     resultOutput += `•  Total strøm (I): ${formatValue(current, 'A')}\n`;
     resultOutput += `•  Faseforskydningsvinkel (φ): ${phaseAngleDeg.toFixed(3)} °\n`;
     resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
     resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
     resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
     resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
+    
+    // Yderligere beregninger, hvis reaktansen er givet
+    if (isCReactance && capacitance > 0) {
+        resultOutput += `•  **Beregnet Kapacitans (C):** ${formatValue(C, 'F')}\n`;
+    }
+    if (isLReactance && inductance > 0) {
+        resultOutput += `•  **Beregnet Induktans (L):** ${formatValue(L, 'H')}\n`;
+    }
 
     document.getElementById('result').textContent = resultOutput;
 }
@@ -202,6 +255,9 @@ function calculateParallelRLC() {
     
     const xL = isLReactance ? inductance : (inductance > 0 && frequency > 0 ? 2 * Math.PI * frequency * inductance : 0);
     const xC = isCReactance ? capacitance : (capacitance > 0 && frequency > 0 ? 1 / (2 * Math.PI * frequency * capacitance) : 0);
+
+    const L = isLReactance ? xL / (2 * Math.PI * frequency) : inductance;
+    const C = isCReactance ? 1 / (2 * Math.PI * frequency * xC) : capacitance;
     
     const iR = voltage > 0 && resistance > 0 ? voltage / resistance : 0;
     const iC = voltage > 0 && xC > 0 ? voltage / xC : 0;
@@ -214,7 +270,7 @@ function calculateParallelRLC() {
     
     if (totalCurrent > 0) {
         totalImpedance = voltage / totalCurrent;
-        impedanceStr = formatValue(totalImpedance, 'Ω');
+        impedanceStr = formatValue(totalImpedance, 'Ohm');
     }
     
     let powerFactor = (totalCurrent > 0) ? iR / totalCurrent : 0;
@@ -234,9 +290,9 @@ function calculateParallelRLC() {
     resultOutput += `--- Parallel Kredsløb ---\n\n`;
     resultOutput += `Indtastede værdier:\n`;
     resultOutput += `Spænding (U): ${formatValue(voltage, 'V')}\n`;
-    resultOutput += `Modstand (R): ${formatValue(resistance, 'Ω')}\n`;
-    resultOutput += `Kapacitans (C): ${isCReactance ? `${formatValue(capacitance, 'Ω')} (Xc)` : formatValue(capacitance, 'F')}\n`;
-    resultOutput += `Induktans (L): ${isLReactance ? `${formatValue(inductance, 'Ω')} (Xl)` : formatValue(inductance, 'H')}\n`;
+    resultOutput += `Modstand (R): ${formatValue(resistance, 'Ohm')}\n`;
+    resultOutput += `Kapacitans (C): ${isCReactance ? `${formatValue(capacitance, 'Ohm')} (Xc)` : formatValue(capacitance, 'F')}\n`;
+    resultOutput += `Induktans (L): ${isLReactance ? `${formatValue(inductance, 'Ohm')} (Xl)` : formatValue(inductance, 'H')}\n`;
     resultOutput += `Frekvens (f): ${formatValue(frequency, 'Hz')}\n\n`;
 
     resultOutput += `**Formler brugt i rækkefølge:**\n\n`;
@@ -254,8 +310,8 @@ function calculateParallelRLC() {
     resultOutput += `   •  φ = arctan((Ic - Il) / Ir)\n\n`;
     
     resultOutput += `Beregnet reaktans og delstrømme:\n`;
-    resultOutput += `•  Kapacitiv reaktans (Xc): ${formatValue(xC, 'Ω')}\n`;
-    resultOutput += `•  Induktiv reaktans (Xl): ${formatValue(xL, 'Ω')}\n`;
+    resultOutput += `•  Kapacitiv reaktans (Xc): ${formatValue(xC, 'Ohm')}\n`;
+    resultOutput += `•  Induktiv reaktans (Xl): ${formatValue(xL, 'Ohm')}\n`;
     resultOutput += `•  Strøm gennem R (Ir): ${formatValue(iR, 'A')}\n`;
     resultOutput += `•  Strøm gennem L (Il): ${formatValue(iL, 'A')}\n`;
     resultOutput += `•  Strøm gennem C (Ic): ${formatValue(iC, 'A')}\n\n`;
@@ -268,6 +324,14 @@ function calculateParallelRLC() {
     resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
     resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
     resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
+    
+    // Yderligere beregninger, hvis reaktansen er givet
+    if (isCReactance && capacitance > 0) {
+        resultOutput += `•  **Beregnet Kapacitans (C):** ${formatValue(C, 'F')}\n`;
+    }
+    if (isLReactance && inductance > 0) {
+        resultOutput += `•  **Beregnet Induktans (L):** ${formatValue(L, 'H')}\n`;
+    }
 
     document.getElementById('result').textContent = resultOutput;
 }
