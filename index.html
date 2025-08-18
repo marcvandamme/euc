@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RLC Lommeregner</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="calculator-container">
@@ -16,8 +16,8 @@
                 Lommeregneren accepterer standardværdier med forstavelser (fx **k, m, µ, n, p**). For at indtaste reaktans direkte, skal du tilføje et bogstav efter tallet.
             </p>
             <ul>
-                <li>**Kapacitiv reaktans Xc** 👉 Indtast **<code>200c</code>** i feltet for Kapacitans.</li>
-                <li>**Induktiv reaktans Xl** 👉 Indtast **<code>120l</code>** i feltet for Induktans.</li>
+                <li>**Kapacitiv reaktans ($X_C$)** 👉 Indtast **<code>200c</code>** i feltet for Kapacitans.</li>
+                <li>**Induktiv reaktans ($X_L$)** 👉 Indtast **<code>120l</code>** i feltet for Induktans.</li>
             </ul>
         </div>
 
@@ -42,12 +42,12 @@
                 <input type="text" id="resistance" placeholder="fx 75">
             </div>
             <div class="input-group">
-                <label for="capacitance">Kapacitans (C) eller $X_C$ [F/Ω]:</label>
-                <input type="text" id="capacitance" placeholder="fx 416u eller 200c">
+                <label for="capacitance">Kapacitans (C) [F]:</label>
+                <input type="text" id="capacitance" placeholder="fx 416u eller 200c for Xc">
             </div>
             <div class="input-group">
-                <label for="inductance">Induktans (L) eller $X_L$ [H/Ω]:</label>
-                <input type="text" id="inductance" placeholder="fx 2.5m eller 120l">
+                <label for="inductance">Induktans (L) [H]:</label>
+                <input type="text" id="inductance" placeholder="fx 2.5m eller 120l for Xl">
             </div>
         </div>
         
