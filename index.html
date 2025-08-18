@@ -4,55 +4,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RLC Lommeregner</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="scripts.js" defer></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <div class="calculator-container">
-        <h2>RLC Kredsløb Lommeregner</h2>
-        
-        <div class="circuit-type">
-            <label for="circuit-select">Vælg kredsløbstype:</label>
-            <select id="circuit-select" name="circuitType">
-                <option value="series">Serie</option>
-                <option value="parallel">Parallel</option>
-            </select>
+        <h1>RLC Lommeregner</h1>
+        <div class="input-section">
+            <div class="input-group">
+                <label for="circuit-select">Vælg Kredsløb:</label>
+                <select id="circuit-select">
+                    <option value="series">Serie</option>
+                    <option value="parallel">Parallel</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="voltage">Spænding (V):</label>
+                <input type="text" id="voltage" placeholder="fx 300">
+            </div>
+            <div class="input-group">
+                <label for="frequency">Frekvens (Hz):</label>
+                <input type="text" id="frequency" placeholder="fx 50">
+            </div>
+            <div class="input-group">
+                <label for="resistance">Modstand (Ω):</label>
+                <input type="text" id="resistance" placeholder="fx 75">
+            </div>
+            <div class="input-group">
+                <label for="capacitance">Kapacitans (F):</label>
+                <input type="text" id="capacitance" placeholder="fx 200c for Xc">
+            </div>
+            <div class="input-group">
+                <label for="inductance">Induktans (H):</label>
+                <input type="text" id="inductance" placeholder="fx 120l for Xl">
+            </div>
         </div>
-
-        <div class="input-group">
-            <label for="voltage">Spænding (U):</label>
-            <input type="text" id="voltage" placeholder="Indtast dine V">
-        </div>
-        
-        <div class="input-group">
-            <label for="frequency">Frekvens (f):</label>
-            <input type="text" id="frequency" placeholder="makes it go BRRRRR">
-        </div>
-        
-        <div class="input-group">
-            <label for="resistance">Ohmsk Modstand (R):</label>
-            <input type="text" id="resistance" placeholder="Vive la résistance">
-        </div>
-
-        <div class="input-group">
-            <label for="inductance">Induktans (L):</label>
-            <input type="text" id="inductance" placeholder="Stor gut, lille måle enhed ofte">
-        </div>
-
-        <div class="input-group">
-            <label for="capacitance">Kapacitans (C):</label>
-            <input type="text" id="capacitance" placeholder="Boom">
-        </div>
-        
         <div class="button-group">
             <button id="calculate-button">Beregn</button>
             <button id="reset-button">Nulstil</button>
         </div>
+        <pre id="result">Dine resultater vil blive vist her...</pre>
 
-        <pre id="result">Dine resultater vil vises her...</pre>
+        <div class="help-section">
+            <h2>Vejledning til input</h2>
+            <p>
+                Lommeregneren accepterer standardværdier med forstavelser. Du kan også direkte indtaste reaktanser ved at tilføje et bogstav efter tallet.
+            </p>
+            <ul>
+                <li>For at indtaste **kapacitiv reaktans ($X_C$)**, tilføj et lille **c** efter tallet. <strong>Eksempel: <code>200c</code></strong></li>
+                <li>For at indtaste **induktiv reaktans ($X_L$)**, tilføj et lille **l** efter tallet. <strong>Eksempel: <code>120l</code></strong></li>
+                <li>Du kan også bruge almindelige præfikser som **k, m, µ, n, p**. <strong>Eksempel: <code>100kΩ</code></strong> for 100 kΩ.</li>
+            </ul>
+        </div>
     </div>
-
+    <script src="scripts.js"></script>
 </body>
 </html>
-
