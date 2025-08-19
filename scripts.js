@@ -8,7 +8,7 @@
 
 // Funktion til at parse en værdi med enhed (k, M, m, u, n, p, l for XL, c for XC, z for Z)
 function parseValue(input) {
-    if (input === null || input === undefined || input === '') {
+    if (input === null || input === undefined || input.trim() === '') {
         return { value: 0, isLReactance: false, isCReactance: false, isImpedance: false };
     }
     
@@ -19,9 +19,8 @@ function parseValue(input) {
     
     // Check for impedans-enhed 'z' eller et rent tal i impedans-feltet
     const isImpedance = rawValue.endsWith('z') || 
-                        (document.activeElement.id === 'impedance' && !isNaN(parseFloat(rawValue)) && !isNaN(rawValue.trim()));
+                        (document.getElementById('impedance') && document.getElementById('impedance').value.trim() === input.trim() && !isNaN(parseFloat(rawValue)));
 
-    // Fjern enhedsbogstavet, hvis det er en reaktans-enhed
     const valueString = isLReactance || isCReactance || isImpedance ? rawValue.slice(0, -1) : rawValue;
     const value = parseFloat(valueString || rawValue);
 
@@ -244,7 +243,7 @@ function calculateSeriesRLC() {
     resultOutput += `•  Faseforskydningsvinkel (φ): ${phaseAngleDeg.toFixed(3)} °\n`;
     resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
     resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
-d    resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
+    resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
     resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
     
     // Yderligere beregninger, hvis reaktansen er givet
