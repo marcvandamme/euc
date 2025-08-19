@@ -18,7 +18,6 @@ function parseValue(input) {
     const isCReactance = rawValue.endsWith('c');
     const isPower = rawValue.endsWith('w') || rawValue.endsWith('s') || rawValue.endsWith('q');
     
-    // Forhindrer parseren i at behandle et tal som impedans medmindre det kommer fra impedansfeltet
     const isImpedance = rawValue.endsWith('z') || (document.getElementById('impedance').value.trim() === input.trim());
 
     const valueString = isLReactance || isCReactance || isImpedance || isPower ? rawValue.slice(0, -1) : rawValue;
@@ -30,7 +29,6 @@ function parseValue(input) {
 
     let parsedValue = value;
     
-    // Håndter SI-præfikser
     let unit = rawValue.replace(String(value), '').trim();
     if (unit.length > 0) {
         unit = unit.charAt(0);
@@ -68,7 +66,6 @@ function formatValue(value, unitType) {
     let unit = '';
     let suffix = '';
 
-    // Bestem enhedstype
     switch(unitType) {
         case 'V':
             unit = 'V';
@@ -130,27 +127,19 @@ function formatValue(value, unitType) {
     return `${value.toFixed(3)} ${suffix}${unit}`;
 }
 
-// Funktion til at læse værdier fra inputfelterne og kalde parseValue
+// Funktion til at læse værdier fra inputfelterne
 function getValues() {
-    const voltage = parseValue(document.getElementById('voltage').value).value;
-    const frequency = parseValue(document.getElementById('frequency').value).value;
-    const resistance = parseValue(document.getElementById('resistance').value).value;
-    const capacitanceResult = parseValue(document.getElementById('capacitance').value);
-    const inductanceResult = parseValue(document.getElementById('inductance').value);
-    const impedanceResult = parseValue(document.getElementById('impedance').value);
-    const power = parseValue(document.getElementById('power').value).value;
-    
     return {
-        voltage,
-        frequency,
-        resistance,
-        capacitance: capacitanceResult.value,
-        inductance: inductanceResult.value,
-        impedance: impedanceResult.value,
-        power,
-        isLReactance: inductanceResult.isLReactance,
-        isCReactance: capacitanceResult.isCReactance,
-        isImpedance: impedanceResult.isImpedance || (document.getElementById('impedance').value.trim() !== '' && impedanceResult.value > 0)
+        voltage: parseValue(document.getElementById('voltage').value).value,
+        frequency: parseValue(document.getElementById('frequency').value).value,
+        resistance: parseValue(document.getElementById('resistance').value).value,
+        capacitance: parseValue(document.getElementById('capacitance').value).value,
+        inductance: parseValue(document.getElementById('inductance').value).value,
+        impedance: parseValue(document.getElementById('impedance').value).value,
+        power: parseValue(document.getElementById('power').value).value,
+        isLReactance: parseValue(document.getElementById('inductance').value).isLReactance,
+        isCReactance: parseValue(document.getElementById('capacitance').value).isCReactance,
+        isImpedance: parseValue(document.getElementById('impedance').value).isImpedance,
     };
 }
 
@@ -159,7 +148,6 @@ function updateCalculator() {
     const { voltage, frequency } = getValues();
     const resultBox = document.getElementById('result');
     
-    // Tjek at mindst én af R, L, C, Z eller P er indtastet, ud over U og f
     const inputs = getValues();
     const knownValues = [inputs.resistance, inputs.capacitance, inputs.inductance, inputs.impedance, inputs.power].filter(v => v > 0);
     
@@ -185,46 +173,34 @@ function resetCalculator() {
     document.getElementById('capacitance').value = '';
     document.getElementById('inductance').value = '';
     document.getElementById('impedance').value = '';
-    document.getElementById('power').value = ''; // Nulstil nytteeffektfeltet
+    document.getElementById('power').value = '';
     document.getElementById('result').textContent = 'Dine resultater vil vises her...';
 }
 
-// Generel beregning for seriekredsløb (R, L, C, RL, RC, LC, RLC)
+// Generel beregning for seriekredsløb
 function calculateSeriesRLC() {
     const { voltage, resistance, capacitance, inductance, frequency, isLReactance, isCReactance, impedance, isImpedance, power } = getValues();
     let resultOutput = '';
-
     let totalImpedance, current, xL = 0, xC = 0;
 
-    // Første trin: Løs for de ukendte værdier baseret på input
     if (power > 0) {
         current = power / resistance;
         totalImpedance = voltage / current;
     } else if (impedance > 0) {
         totalImpedance = impedance;
         current = voltage / totalImpedance;
-    } else if (resistance > 0) {
+    } else {
         xL = isLReactance ? inductance : (inductance > 0 ? 2 * Math.PI * frequency * inductance : 0);
         xC = isCReactance ? capacitance : (capacitance > 0 ? 1 / (2 * Math.PI * frequency * capacitance) : 0);
         totalImpedance = Math.sqrt(resistance * resistance + Math.pow(xL - xC, 2));
         current = voltage / totalImpedance;
-    } else {
-        // Håndter andre kombinationer
-        resultOutput = "Ikke nok information til at beregne seriekredsløb.";
-        document.getElementById('result').textContent = resultOutput;
-        return;
     }
 
-    // Andet trin: Find alle manglende værdier
-    if (!totalImpedance) {
-      totalImpedance = voltage / current;
-    }
-
+    if (!totalImpedance) { totalImpedance = voltage / current; }
     let XL_minus_XC = Math.sqrt(Math.pow(totalImpedance, 2) - Math.pow(resistance, 2));
     if (isNaN(XL_minus_XC)) XL_minus_XC = 0;
-
+    
     if (inductance === 0 && capacitance === 0) {
-        // Hvis reaktans ikke er givet, antag at det er en RL-kreds og beregn XL
         if (XL_minus_XC > 0) {
             xL = XL_minus_XC;
             inductance = xL / (2 * Math.PI * frequency);
@@ -270,7 +246,6 @@ function calculateSeriesRLC() {
     resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
     resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
     
-    // Yderligere beregninger, hvis reaktansen er givet
     if (isCReactance && capacitance > 0) {
         resultOutput += `•  **Beregnet Kapacitans (C):** ${formatValue(capacitance, 'F')}\n`;
     }
@@ -281,14 +256,13 @@ function calculateSeriesRLC() {
     document.getElementById('result').textContent = resultOutput;
 }
 
-// Generel beregning for parallelkredsløb (R, L, C, RL, RC, LC, RLC)
+// Generel beregning for parallelkredsløb
 function calculateParallelRLC() {
     const { voltage, resistance, capacitance, inductance, frequency, isLReactance, isCReactance, impedance, isImpedance, power } = getValues();
     let resultOutput = '';
     
     let totalImpedance, totalCurrent, xL = 0, xC = 0, iR = 0, iL = 0, iC = 0;
 
-    // Første trin: Løs for de ukendte værdier baseret på input
     if (power > 0) {
       iR = power / voltage;
       if (resistance === 0) resistance = voltage / iR;
@@ -319,7 +293,6 @@ function calculateParallelRLC() {
     
     if (totalImpedance === 0) totalImpedance = voltage / totalCurrent;
 
-    // Andet trin: Find alle manglende værdier
     if (resistance > 0 && iR === 0) iR = voltage / resistance;
     if (xL > 0 && iL === 0) iL = voltage / xL;
     if (xC > 0 && iC === 0) iC = voltage / xC;
@@ -364,7 +337,6 @@ function calculateParallelRLC() {
     resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
     resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
     
-    // Yderligere beregninger, hvis reaktansen eller impedansen er givet
     if (isCReactance && capacitance > 0) {
         resultOutput += `•  **Beregnet Kapacitans (C):** ${formatValue(capacitance, 'F')}\n`;
     }
@@ -380,6 +352,14 @@ function calculateParallelRLC() {
 
 // Vent, indtil DOM'en er fuldt indlæst, før du tilføjer event listeners
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('calculate-button').addEventListener('click', updateCalculator);
-    document.getElementById('reset-button').addEventListener('click', resetCalculator);
+    const calculateButton = document.getElementById('calculate-button');
+    const resetButton = document.getElementById('reset-button');
+    
+    if (calculateButton) {
+        calculateButton.addEventListener('click', updateCalculator);
+    }
+    
+    if (resetButton) {
+        resetButton.addEventListener('click', resetCalculator);
+    }
 });
