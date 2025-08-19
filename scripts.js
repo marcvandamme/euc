@@ -1,6 +1,6 @@
 /**
  * @file scripts.js
- * @author  Gemini (via Google) and User
+ * @author  Gemini (via Google) and MGS
  * @license MIT
  * @description A JavaScript file for calculating series and parallel RLC circuits.
  * The core code was developed collaboratively with Gemini, a large language model from Google.
@@ -8,18 +8,19 @@
 
 // Funktion til at parse en værdi med enhed (k, M, m, u, n, p, l for XL, c for XC, z for Z)
 function parseValue(input) {
-    if (!input) return { value: 0, isLReactance: false, isCReactance: false, isImpedance: false };
+    if (!input) {
+        return { value: 0, isLReactance: false, isCReactance: false, isImpedance: false };
+    }
     
-    const rawValue = input.trim().toLowerCase();
+    const rawValue = String(input).trim().toLowerCase();
     
     const isLReactance = rawValue.endsWith('l');
     const isCReactance = rawValue.endsWith('c');
-    const isImpedance = rawValue.endsWith('z');
+    const isImpedance = rawValue.endsWith('z') || (rawValue.match(/^-?\d+(\.\d+)?$/) && document.getElementById('impedance').value.trim() === input.trim());
 
     // Fjern enhedsbogstavet, hvis det er en reaktans-enhed
     const valueString = isLReactance || isCReactance || isImpedance ? rawValue.slice(0, -1) : rawValue;
-    const value = parseFloat(valueString);
-    const unit = rawValue.slice(value.toString().length).trim();
+    const value = parseFloat(valueString || rawValue);
 
     if (isNaN(value)) {
         return { value: 0, isLReactance: false, isCReactance: false, isImpedance: false };
@@ -28,7 +29,12 @@ function parseValue(input) {
     let parsedValue = value;
     
     // Håndter SI-præfikser
-    switch (unit.replace('l', '').replace('c', '').replace('z', '')) {
+    let unit = rawValue.replace(value.toString(), '').trim();
+    if (unit.length > 0) {
+        unit = unit.charAt(0);
+    }
+    
+    switch (unit) {
         case 'k': // Kilo
             parsedValue *= 1e3;
             break;
@@ -249,37 +255,50 @@ function calculateParallelRLC() {
     const { voltage, resistance, capacitance, inductance, frequency, isLReactance, isCReactance, impedance, isImpedance } = getValues();
     let resultOutput = '';
     
-    let xL, L;
-    let xC, C;
-    let totalImpedance;
-    let totalCurrent;
+    let xL = 0, L = 0;
+    let xC = 0, C = 0;
+    let totalImpedance = 0;
+    let totalCurrent = 0;
 
     // Første trin: Håndter input
-    xC = isCReactance ? capacitance : (capacitance > 0 ? 1 / (2 * Math.PI * frequency * capacitance) : 0);
-    xL = isLReactance ? inductance : (inductance > 0 ? 2 * Math.PI * frequency * inductance : 0);
-    
-    // Beregn strømme, hvis reaktanser er givet
-    const iR = voltage > 0 && resistance > 0 ? voltage / resistance : 0;
-    const iC = voltage > 0 && xC > 0 ? voltage / xC : 0;
-    const iL = voltage > 0 && xL > 0 ? voltage / xL : 0;
+    if (isCReactance) {
+        xC = capacitance;
+        C = 1 / (2 * Math.PI * frequency * xC);
+    } else if (capacitance > 0) {
+        C = capacitance;
+        xC = 1 / (2 * Math.PI * frequency * C);
+    }
+
+    if (isLReactance) {
+        xL = inductance;
+        L = xL / (2 * Math.PI * frequency);
+    } else if (inductance > 0) {
+        L = inductance;
+        xL = 2 * Math.PI * frequency * L;
+    }
+
+    const iR = (voltage > 0 && resistance > 0) ? voltage / resistance : 0;
+    const iC = (voltage > 0 && xC > 0) ? voltage / xC : 0;
+    const iL = (voltage > 0 && xL > 0) ? voltage / xL : 0;
 
     // Andet trin: Beregn ud fra impedans, hvis den er givet
     if (isImpedance && impedance > 0) {
         totalImpedance = impedance;
         totalCurrent = voltage / totalImpedance;
         
-        // Find den induktive strøm ved hjælp af total strøm og strømmen gennem R
-        const iReactiveSquared = totalCurrent**2 - iR**2;
-        const iReactive = Math.sqrt(Math.abs(iReactiveSquared)); // Brug Math.abs for at undgå fejl ved små unøjagtigheder
-        iL = iReactive; // I et RL-kredsløb er den reaktive strøm = IL
-        xL = iL > 0 ? voltage / iL : 0;
-        L = xL > 0 ? xL / (2 * Math.PI * frequency) : 0;
+        // Find den reaktive strøm (som er IL, da vi antager en ideel spole)
+        const iReactiveSquared = Math.pow(totalCurrent, 2) - Math.pow(iR, 2);
+        const iReactive = Math.sqrt(Math.abs(iReactiveSquared));
         
+        iL = iReactive; 
+        if (iL > 0) {
+            xL = voltage / iL;
+            L = xL / (2 * Math.PI * frequency);
+        }
+
     } else {
-        totalCurrent = Math.sqrt(iR**2 + (iC - iL)**2);
-        totalImpedance = totalCurrent > 0 ? voltage / totalCurrent : 0;
-        L = inductance;
-        C = capacitance;
+        totalCurrent = Math.sqrt(Math.pow(iR, 2) + Math.pow(iL - iC, 2));
+        totalImpedance = (totalCurrent > 0) ? voltage / totalCurrent : 0;
     }
 
     // Tredje trin: Fortsæt med resten af beregningerne
@@ -339,15 +358,15 @@ function calculateParallelRLC() {
     resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
     
     // Yderligere beregninger, hvis reaktansen eller impedansen er givet
-    if (isCReactance && capacitance > 0) {
+    if (isCReactance) {
         resultOutput += `•  **Beregnet Kapacitans (C):** ${formatValue(C, 'F')}\n`;
     }
-    if (isLReactance && inductance > 0) {
+    if (isLReactance) {
         resultOutput += `•  **Beregnet Induktans (L):** ${formatValue(L, 'H')}\n`;
     }
     if (isImpedance && impedance > 0 && xL > 0) {
         resultOutput += `•  **Beregnet Induktans (L):** ${formatValue(L, 'H')}\n`;
     }
-
+    
     document.getElementById('result').textContent = resultOutput;
 }
