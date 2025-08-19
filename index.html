@@ -4,17 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RLC Lommeregner</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="calculator-container">
-        <h1>YA RLC Lommeregner</h1>
+        <h1>RLC Lommeregner</h1>
         
         <div class="help-section">
             <h2>Vejledning til input</h2>
             <p>
                 Lommeregneren accepterer standardværdier med forstavelser (fx **k, m, µ, n, p**). For at indtaste reaktans direkte, skal du tilføje et bogstav efter tallet.
             </p>
+            <ul>
+                <li>**Kapacitiv reaktans ($X_C$)** 👉 Indtast **<code>200c</code>** i feltet for Kapacitans.</li>
+                <li>**Induktiv reaktans ($X_L$)** 👉 Indtast **<code>120l</code>** i feltet for Induktans.</li>
+                <li>**Total impedans (Z)** 👉 Indtast **<code>70z</code>** i feltet for Impedans.</li>
+            </ul>
         </div>
 
         <div class="input-section">
@@ -45,6 +50,10 @@
                 <label for="inductance">Induktans (L) [H]:</label>
                 <input type="text" id="inductance" placeholder="fx 2.5m eller 120l for Xl">
             </div>
+            <div class="input-group">
+                <label for="impedance">Impedans (Z) [Ω]:</label>
+                <input type="text" id="impedance" placeholder="fx 70 eller 70z for Z">
+            </div>
         </div>
         
         <div class="button-group">
@@ -56,6 +65,3 @@
     <script src="scripts.js"></script>
 </body>
 </html>
-
-
-
