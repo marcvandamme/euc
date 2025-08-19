@@ -304,6 +304,11 @@ function calculateParallelRLC() {
         totalCurrent = Math.sqrt(Math.pow(iR, 2) + Math.pow(iL - iC, 2));
         if (totalCurrent > 0) totalImpedance = voltage / totalCurrent;
     }
+    
+    if (isNaN(totalCurrent) || isNaN(totalImpedance)) {
+        document.getElementById('result').textContent = "Fejl: Ikke nok information til at beregne.";
+        return;
+    }
 
     // Tredje trin: Beregn alle andre resultater
     const realPower = voltage * iR;
