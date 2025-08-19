@@ -256,61 +256,71 @@ function calculateSeriesRLC() {
     document.getElementById('result').textContent = resultOutput;
 }
 
-// Generel beregning for parallelkredsløb
+// Forbedret beregning for parallelkredsløb
 function calculateParallelRLC() {
     const { voltage, resistance, capacitance, inductance, frequency, isLReactance, isCReactance, impedance, isImpedance, power } = getValues();
     let resultOutput = '';
     
-    let totalImpedance, totalCurrent, xL = 0, xC = 0, iR = 0, iL = 0, iC = 0;
+    let totalImpedance, totalCurrent, iR = 0, iL = 0, iC = 0, xL = 0, xC = 0;
 
-    if (power > 0) {
-      iR = power / voltage;
-      if (resistance === 0) resistance = voltage / iR;
-      totalCurrent = Math.sqrt(Math.pow(power / voltage, 2) + Math.pow(iL - iC, 2));
-      totalImpedance = voltage / totalCurrent;
-    } else if (resistance > 0 && impedance > 0) {
-      totalImpedance = impedance;
-      totalCurrent = voltage / totalImpedance;
-      iR = voltage / resistance;
-      
-      const iReactiveSquared = Math.pow(totalCurrent, 2) - Math.pow(iR, 2);
-      if (iReactiveSquared > 0) {
-        iL = Math.sqrt(iReactiveSquared);
-        xL = voltage / iL;
-        inductance = xL / (2 * Math.PI * frequency);
-      }
-    } else if (resistance > 0 && inductance > 0) {
-      iR = voltage / resistance;
-      xL = isLReactance ? inductance : (2 * Math.PI * frequency * inductance);
-      iL = voltage / xL;
-      totalCurrent = Math.sqrt(Math.pow(iR, 2) + Math.pow(iL, 2));
-      totalImpedance = voltage / totalCurrent;
-    } else {
-        resultOutput = "Ikke nok information til at beregne parallelkredsløb.";
-        document.getElementById('result').textContent = resultOutput;
-        return;
+    // Første trin: Beregn ud fra de kendte værdier
+    if (resistance > 0) {
+        iR = voltage / resistance;
     }
-    
-    if (totalImpedance === 0) totalImpedance = voltage / totalCurrent;
+    if (inductance > 0) {
+        xL = isLReactance ? inductance : (2 * Math.PI * frequency * inductance);
+        if (xL > 0) iL = voltage / xL;
+    }
+    if (capacitance > 0) {
+        xC = isCReactance ? capacitance : (1 / (2 * Math.PI * frequency * capacitance));
+        if (xC > 0) iC = voltage / xC;
+    }
 
-    if (resistance > 0 && iR === 0) iR = voltage / resistance;
-    if (xL > 0 && iL === 0) iL = voltage / xL;
-    if (xC > 0 && iC === 0) iC = voltage / xC;
+    // Andet trin: Løs for ukendte værdier baseret på input
+    if (power > 0 && resistance === 0) {
+        iR = power / voltage;
+        if (iR > 0) resistance = voltage / iR;
+    } else if (power > 0) {
+        iR = power / voltage; // Brug R og P til at finde Ir, derefter den samlede strøm
+    }
 
-    let realPower = voltage * iR;
-    let apparentPower = voltage * totalCurrent;
-    let reactivePower = Math.abs(voltage * (iL - iC));
-    let powerFactor = apparentPower > 0 ? realPower / apparentPower : 0;
-    let phaseAngleDeg = 0;
+    if (isImpedance && impedance > 0) {
+        totalImpedance = impedance;
+        totalCurrent = voltage / totalImpedance;
 
-    if (iR !== 0) {
-        phaseAngleDeg = Math.atan((iC - iL) / iR) * (180 / Math.PI);
+        // Brug Pythagoras' sætning til at finde den reaktive strøm (som er (iL - iC))
+        const iReactiveSquared = Math.pow(totalCurrent, 2) - Math.pow(iR, 2);
+
+        if (iReactiveSquared > 0) {
+            const iReactive = Math.sqrt(iReactiveSquared);
+            // Her antager vi en RL-kreds, da kun R og Z er givet
+            if (iL === 0 && iC === 0) {
+                iL = iReactive;
+                xL = voltage / iL;
+                inductance = xL / (2 * Math.PI * frequency);
+            }
+        }
     } else {
-        if (iC > iL) { phaseAngleDeg = 90; }
-        else if (iL > iC) { phaseAngleDeg = -90; }
+        totalCurrent = Math.sqrt(Math.pow(iR, 2) + Math.pow(iL - iC, 2));
+        if (totalCurrent > 0) totalImpedance = voltage / totalCurrent;
+    }
+
+    // Tredje trin: Beregn alle andre resultater
+    const realPower = voltage * iR;
+    const apparentPower = voltage * totalCurrent;
+    const reactivePower = Math.abs(voltage * (iL - iC));
+    const powerFactor = apparentPower > 0 ? realPower / apparentPower : 0;
+    let phaseAngleDeg = 0;
+    
+    if (iR !== 0) {
+        phaseAngleDeg = Math.atan((iL - iC) / iR) * (180 / Math.PI);
+    } else {
+        if (iL > iC) { phaseAngleDeg = 90; }
+        else if (iC > iL) { phaseAngleDeg = -90; }
         else { phaseAngleDeg = 0; }
     }
 
+    // Byg resultatteksten
     resultOutput += `--- Parallel Kredsløb ---\n\n`;
     resultOutput += `Indtastede værdier:\n`;
     resultOutput += `Spænding (U): ${formatValue(voltage, 'V')}\n`;
