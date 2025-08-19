@@ -190,7 +190,18 @@ function calculateSeriesRLC() {
 
     // Femte trin: Byg resultatstrengen
     resultOutput += `--- Serie Kredsløb ---\n\n`;
-    resultOutput += `Indtastede værdier:\n`;
+    resultOutput += `**Formler anvendt:**\n`;
+    resultOutput += `•  Induktiv reaktans: $X_L = 2 \cdot \pi \cdot f \cdot L$\n`;
+    resultOutput += `•  Kapacitiv reaktans: $X_C = \\frac{1}{2 \cdot \pi \cdot f \cdot C}$\n`;
+    resultOutput += `•  Total impedans: $Z_{total} = \\sqrt{R^2 + (X_L - X_C)^2}$\n`;
+    resultOutput += `•  Total strøm: $I_{total} = \\frac{U}{Z_{total}}$\n`;
+    resultOutput += `•  Nytteeffekt: $P = I^2 \cdot R$\n`;
+    resultOutput += `•  Tilsyneladende effekt: $S = U \cdot I$\n`;
+    resultOutput += `•  Reaktiv effekt: $Q = I^2 \cdot |X_L - X_C|$\n`;
+    resultOutput += `•  Effektfaktor: $\\cos \\phi = \\frac{P}{S}$\n`;
+    resultOutput += `•  Faseforskydningsvinkel: $\\phi = \\arccos(\\cos \\phi)$\n\n`;
+    
+    resultOutput += `**Indtastede værdier:**\n`;
     resultOutput += `Spænding (U): ${formatValue(voltage, 'V')}\n`;
     resultOutput += `Modstand (R): ${formatValue(resistance, 'Ohm')}\n`;
     resultOutput += `Kapacitans (C): ${isCReactance ? `${formatValue(capacitance, 'Ohm')} (Xc)` : formatValue(capacitance, 'F')}\n`;
@@ -263,7 +274,18 @@ function calculateParallelRLC() {
 
     // Fjerde trin: Byg resultatstrengen
     resultOutput += `--- Parallel Kredsløb ---\n\n`;
-    resultOutput += `Indtastede værdier:\n`;
+    resultOutput += `**Formler anvendt:**\n`;
+    resultOutput += `•  Induktiv reaktans: $X_L = 2 \cdot \pi \cdot f \cdot L$\n`;
+    resultOutput += `•  Kapacitiv reaktans: $X_C = \\frac{1}{2 \cdot \pi \cdot f \cdot C}$\n`;
+    resultOutput += `•  Total strøm: $I_{total} = \\sqrt{I_R^2 + (I_L - I_C)^2}$\n`;
+    resultOutput += `•  Total impedans: $Z_{total} = \\frac{U}{I_{total}}$\n`;
+    resultOutput += `•  Nytteeffekt: $P = U \cdot I_R$\n`;
+    resultOutput += `•  Tilsyneladende effekt: $S = U \cdot I_{total}$\n`;
+    resultOutput += `•  Reaktiv effekt: $Q = U \cdot |I_L - I_C|$\n`;
+    resultOutput += `•  Effektfaktor: $\\cos \\phi = \\frac{P}{S}$\n`;
+    resultOutput += `•  Faseforskydningsvinkel: $\\phi = \\arctan(\\frac{I_L-I_C}{I_R})$\n\n`;
+
+    resultOutput += `**Indtastede værdier:**\n`;
     resultOutput += `Spænding (U): ${formatValue(voltage, 'V')}\n`;
     resultOutput += `Modstand (R): ${formatValue(resistance, 'Ohm')}\n`;
     resultOutput += `Kapacitans (C): ${isCReactance ? `${formatValue(capacitance, 'Ohm')} (Xc)` : formatValue(capacitance, 'F')}\n`;
