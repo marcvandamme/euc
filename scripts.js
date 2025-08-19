@@ -70,7 +70,7 @@ function formatValue(value, unitType) {
         case 'V': unit = 'V'; break;
         case 'A': unit = 'A'; break;
         case 'Hz': unit = 'Hz'; break;
-        case 'Ohm': unit = 'Ohm'; break;
+        case 'Ohm': unit = 'Ω'; break;
         case 'H': unit = 'H'; break;
         case 'F': unit = 'F'; break;
         case 'W': unit = 'W'; break;
@@ -94,7 +94,7 @@ function formatValue(value, unitType) {
         suffix = 'm';
         value /= 1e-3;
     } else if (Math.abs(value) >= 1e-6) {
-        suffix = 'u';
+        suffix = 'μ';
         value /= 1e-6;
     } else if (Math.abs(value) >= 1e-9) {
         suffix = 'n';
@@ -161,34 +161,7 @@ function resetCalculator() {
 function calculateSeriesRLC() {
     const { voltage, resistance, capacitance, inductance, frequency, isLReactance, isCReactance, impedance, isImpedance } = getValues();
     let resultOutput = '';
-    let totalImpedance, current, xL = 0, xC = 0;
-
-    // Første trin: Beregn reaktans baseret på L og C
-    xL = isLReactance ? inductance : (inductance > 0 ? 2 * Math.PI * frequency * inductance : 0);
-    xC = isCReactance ? capacitance : (capacitance > 0 ? 1 / (2 * Math.PI * frequency * capacitance) : 0);
     
-    // Andet trin: Beregn total impedans og strøm
-    if (isImpedance && impedance > 0) {
-        totalImpedance = impedance;
-    } else {
-        totalImpedance = Math.sqrt(Math.pow(resistance, 2) + Math.pow(xL - xC, 2));
-    }
-    
-    current = voltage / totalImpedance;
-
-    // Tredje trin: Beregn effekter og vinkler
-    const realPower = current * current * resistance;
-    const apparentPower = voltage * current;
-    const reactivePower = Math.abs(current * current * (xL - xC));
-    const powerFactor = apparentPower > 0 ? realPower / apparentPower : 0;
-    const phaseAngleDeg = (powerFactor !== 0) ? Math.acos(powerFactor) * (180 / Math.PI) : 0;
-
-    // Fjerde trin: Beregn spændingsfald
-    const uR = current * resistance;
-    const uL = current * xL;
-    const uC = current * xC;
-
-    // Femte trin: Byg resultatstrengen
     resultOutput += `--- Serie Kredsløb ---\n\n`;
     resultOutput += `**Formler anvendt:**\n`;
     resultOutput += `•  Induktiv reaktans (Xl): Xl = 2 * pi * f * L\n`;
@@ -212,22 +185,6 @@ function calculateSeriesRLC() {
     resultOutput += `Impedans (Z): ${isImpedance ? `${formatValue(impedance, 'Ohm')} (Givet)` : 'Beregnet'}\n`;
     resultOutput += `Frekvens (f): ${formatValue(frequency, 'Hz')}\n\n`;
     
-    resultOutput += `**Beregnet reaktans og spændingsfald:**\n`;
-    resultOutput += `•  Kapacitiv reaktans (Xc): ${formatValue(xC, 'Ohm')}\n`;
-    resultOutput += `•  Induktiv reaktans (Xl): ${formatValue(xL, 'Ohm')}\n`;
-    resultOutput += `•  Spændingsfald over R (Ur): ${formatValue(uR, 'V')}\n`;
-    resultOutput += `•  Spændingsfald over L (Ul): ${formatValue(uL, 'V')}\n`;
-    resultOutput += `•  Spændingsfald over C (Uc): ${formatValue(uC, 'V')}\n\n`;
-    
-    resultOutput += `**Endelige resultater:**\n`;
-    resultOutput += `•  Total impedans (Z): ${formatValue(totalImpedance, 'Ohm')}\n`;
-    resultOutput += `•  Total strøm (I): ${formatValue(current, 'A')}\n`;
-    resultOutput += `•  Faseforskydningsvinkel (φ): ${phaseAngleDeg.toFixed(3)} °\n`;
-    resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
-    resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
-    resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
-    resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
-    
     document.getElementById('result').textContent = resultOutput;
 }
 
@@ -235,47 +192,7 @@ function calculateSeriesRLC() {
 function calculateParallelRLC() {
     const { voltage, resistance, capacitance, inductance, frequency, isLReactance, isCReactance, impedance, isImpedance } = getValues();
     let resultOutput = '';
-    
-    let totalImpedance, totalCurrent, iR = 0, iL = 0, iC = 0, xL = 0, xC = 0;
 
-    // Første trin: Beregn reaktanser og grenstrømme
-    if (resistance > 0) iR = voltage / resistance;
-    
-    if (inductance > 0) {
-        xL = isLReactance ? inductance : (2 * Math.PI * frequency * inductance);
-        if (xL > 0) iL = voltage / xL;
-    }
-    
-    if (capacitance > 0) {
-        xC = isCReactance ? capacitance : (1 / (2 * Math.PI * frequency * capacitance));
-        if (xC > 0) iC = voltage / xC;
-    }
-
-    // Andet trin: Beregn total strøm og impedans
-    if (isImpedance && impedance > 0) {
-        totalImpedance = impedance;
-        totalCurrent = voltage / totalImpedance;
-    } else {
-        totalCurrent = Math.sqrt(Math.pow(iR, 2) + Math.pow(iL - iC, 2));
-        if (totalCurrent > 0) totalImpedance = voltage / totalCurrent;
-    }
-
-    // Tredje trin: Beregn effekter og vinkler
-    const realPower = voltage * iR;
-    const apparentPower = voltage * totalCurrent;
-    const reactivePower = Math.abs(voltage * (iL - iC));
-    const powerFactor = apparentPower > 0 ? realPower / apparentPower : 0;
-    
-    let phaseAngleDeg = 0;
-    if (iR !== 0) {
-        phaseAngleDeg = Math.atan((iL - iC) / iR) * (180 / Math.PI);
-    } else if (iL > iC) {
-        phaseAngleDeg = 90;
-    } else if (iC > iL) {
-        phaseAngleDeg = -90;
-    }
-
-    // Fjerde trin: Byg resultatstrengen
     resultOutput += `--- Parallel Kredsløb ---\n\n`;
     resultOutput += `**Formler anvendt:**\n`;
     resultOutput += `•  Induktiv reaktans (Xl): Xl = 2 * pi * f * L\n`;
@@ -298,22 +215,6 @@ function calculateParallelRLC() {
     resultOutput += `Induktans (L): ${isLReactance ? `${formatValue(inductance, 'Ohm')} (Xl)` : formatValue(inductance, 'H')}\n`;
     resultOutput += `Impedans (Z): ${isImpedance ? `${formatValue(impedance, 'Ohm')} (Givet)` : 'Beregnet'}\n`;
     resultOutput += `Frekvens (f): ${formatValue(frequency, 'Hz')}\n\n`;
-
-    resultOutput += `**Beregnet reaktans og delstrømme:**\n`;
-    resultOutput += `•  Kapacitiv reaktans (Xc): ${formatValue(xC, 'Ohm')}\n`;
-    resultOutput += `•  Induktiv reaktans (Xl): ${formatValue(xL, 'Ohm')}\n`;
-    resultOutput += `•  Strøm gennem R (Ir): ${formatValue(iR, 'A')}\n`;
-    resultOutput += `•  Strøm gennem L (Il): ${formatValue(iL, 'A')}\n`;
-    resultOutput += `•  Strøm gennem C (Ic): ${formatValue(iC, 'A')}\n\n`;
-    
-    resultOutput += `**Endelige resultater:**\n`;
-    resultOutput += `•  Total impedans (Z): ${formatValue(totalImpedance, 'Ohm')}\n`;
-    resultOutput += `•  Total strøm (I): ${formatValue(totalCurrent, 'A')}\n`;
-    resultOutput += `•  Faseforskydningsvinkel (φ): ${phaseAngleDeg.toFixed(3)} °\n`;
-    resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
-    resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
-    resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
-    resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
     
     document.getElementById('result').textContent = resultOutput;
 }
