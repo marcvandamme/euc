@@ -183,32 +183,44 @@ function calculateSeriesRLC() {
     let resultOutput = '';
     let totalImpedance, current, xL = 0, xC = 0;
 
-    if (power > 0) {
-        current = power / resistance;
-        totalImpedance = voltage / current;
-    } else if (impedance > 0) {
+    // Første trin: Beregn reaktans
+    xL = isLReactance ? inductance : (inductance > 0 ? 2 * Math.PI * frequency * inductance : 0);
+    xC = isCReactance ? capacitance : (capacitance > 0 ? 1 / (2 * Math.PI * frequency * capacitance) : 0);
+    
+    // Andet trin: Find impedans og strøm baseret på kendte værdier
+    if (impedance > 0) {
         totalImpedance = impedance;
         current = voltage / totalImpedance;
+        // Check for uoverensstemmelse i input
+        if (Math.abs(totalImpedance - Math.sqrt(resistance * resistance + Math.pow(xL - xC, 2))) > 0.1) {
+             resultOutput += `Advarsel: De indtastede værdier er muligvis ikke i overensstemmelse med hinanden.\n`;
+        }
     } else {
-        xL = isLReactance ? inductance : (inductance > 0 ? 2 * Math.PI * frequency * inductance : 0);
-        xC = isCReactance ? capacitance : (capacitance > 0 ? 1 / (2 * Math.PI * frequency * capacitance) : 0);
         totalImpedance = Math.sqrt(resistance * resistance + Math.pow(xL - xC, 2));
         current = voltage / totalImpedance;
     }
-
-    if (!totalImpedance) { totalImpedance = voltage / current; }
-    let XL_minus_XC = Math.sqrt(Math.pow(totalImpedance, 2) - Math.pow(resistance, 2));
-    if (isNaN(XL_minus_XC)) XL_minus_XC = 0;
     
-    if (inductance === 0 && capacitance === 0) {
-        if (XL_minus_XC > 0) {
-            xL = XL_minus_XC;
+    // Tredje trin: Løs for ukendte værdier
+    if (totalImpedance === 0) {
+        document.getElementById('result').textContent = "Fejl: Total impedans kan ikke være nul.";
+        return;
+    }
+    
+    if (inductance === 0 && xL === 0 && capacitance > 0) {
+        // Find L baseret på Z
+        const XL_minus_XC_squared = Math.pow(totalImpedance, 2) - Math.pow(resistance, 2);
+        if (XL_minus_XC_squared >= 0) {
+            xL = Math.sqrt(XL_minus_XC_squared) + xC;
             inductance = xL / (2 * Math.PI * frequency);
         }
-    } else if (inductance > 0 && capacitance === 0) {
-      xL = isLReactance ? inductance : (2 * Math.PI * frequency * inductance);
-    } else if (capacitance > 0 && inductance === 0) {
-      xC = isCReactance ? capacitance : (1 / (2 * Math.PI * frequency * capacitance));
+    }
+    if (capacitance === 0 && xC === 0 && inductance > 0) {
+         // Find C baseret på Z
+         const XC_minus_XL_squared = Math.pow(totalImpedance, 2) - Math.pow(resistance, 2);
+         if (XC_minus_XL_squared >= 0) {
+             xC = Math.sqrt(XC_minus_XL_squared) + xL;
+             capacitance = 1 / (2 * Math.PI * frequency * xC);
+         }
     }
 
     const realPower = current * current * resistance;
@@ -246,13 +258,13 @@ function calculateSeriesRLC() {
     resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
     resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
     
-    if (isCReactance && capacitance > 0) {
-        resultOutput += `•  **Beregnet Kapacitans (C):** ${formatValue(capacitance, 'F')}\n`;
-    }
-    if (isLReactance && inductance > 0) {
+    if (inductance > 0 && !isLReactance) {
         resultOutput += `•  **Beregnet Induktans (L):** ${formatValue(inductance, 'H')}\n`;
     }
-
+    if (capacitance > 0 && !isCReactance) {
+        resultOutput += `•  **Beregnet Kapacitans (C):** ${formatValue(capacitance, 'F')}\n`;
+    }
+    
     document.getElementById('result').textContent = resultOutput;
 }
 
