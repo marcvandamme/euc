@@ -20,7 +20,6 @@ function parseValue(input) {
     // Forhindrer parseren i at behandle et tal som impedans medmindre det kommer fra impedansfeltet
     const isImpedance = rawValue.endsWith('z') || (document.getElementById('impedance').value.trim() === input.trim());
 
-    // Fjern enhedsbogstavet, hvis det er en reaktans-enhed
     const valueString = isLReactance || isCReactance || isImpedance ? rawValue.slice(0, -1) : rawValue;
     const value = parseFloat(valueString || rawValue);
 
@@ -281,12 +280,18 @@ function calculateParallelRLC() {
         
         // Find den reaktive strøm (som er I_L i dette tilfælde)
         const iReactiveSquared = Math.pow(totalCurrent, 2) - Math.pow(iR, 2);
-        const iReactive = Math.sqrt(Math.max(0, iReactiveSquared));
         
-        iL = iReactive; 
-        if (iL > 0) {
-            xL = voltage / iL;
-            L = xL / (2 * Math.PI * frequency);
+        if (iReactiveSquared > 0) {
+            const iReactive = Math.sqrt(iReactiveSquared);
+            // I parallel kredsløb er reaktiv strøm = (Il - Ic)
+            // Da Ic er 0, er iL = iReactive
+            iL = iReactive;
+            xL = (iL > 0) ? voltage / iL : 0;
+            L = (xL > 0) ? xL / (2 * Math.PI * frequency) : 0;
+        } else {
+            iL = 0;
+            xL = 0;
+            L = 0;
         }
     } else {
         totalCurrent = Math.sqrt(Math.pow(iR, 2) + Math.pow(iL - iC, 2));
@@ -297,16 +302,16 @@ function calculateParallelRLC() {
     let powerFactor = (totalCurrent > 0) ? iR / totalCurrent : 0;
     let phaseAngleDeg = 0;
     if (iR !== 0) {
-        phaseAngleDeg = Math.atan((iC - iL) / iR) * (180 / Math.PI);
+        phaseAngleDeg = Math.atan((iL - iC) / iR) * (180 / Math.PI);
     } else {
-        if (iC > iL) { phaseAngleDeg = 90; }
-        else if (iL > iC) { phaseAngleDeg = -90; }
+        if (iL > iC) { phaseAngleDeg = 90; }
+        else if (iC > iL) { phaseAngleDeg = -90; }
         else { phaseAngleDeg = 0; }
     }
     
     const realPower = voltage * iR;
     const apparentPower = voltage * totalCurrent;
-    const reactivePower = Math.abs(voltage * (iC - iL));
+    const reactivePower = Math.abs(voltage * (iL - iC));
 
     resultOutput += `--- Parallel Kredsløb ---\n\n`;
     resultOutput += `Indtastede værdier:\n`;
