@@ -189,11 +189,6 @@ function resetCalculator() {
     document.getElementById('result').textContent = 'Dine resultater vil vises her...';
 }
 
-// Tilføj event listeners til knapperne
-document.getElementById('calculate-button').addEventListener('click', updateCalculator);
-document.getElementById('reset-button').addEventListener('click', resetCalculator);
-
-
 // Generel beregning for seriekredsløb (R, L, C, RL, RC, LC, RLC)
 function calculateSeriesRLC() {
     const { voltage, resistance, capacitance, inductance, frequency, isLReactance, isCReactance, impedance, isImpedance, power } = getValues();
@@ -382,3 +377,9 @@ function calculateParallelRLC() {
     
     document.getElementById('result').textContent = resultOutput;
 }
+
+// Vent, indtil DOM'en er fuldt indlæst, før du tilføjer event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('calculate-button').addEventListener('click', updateCalculator);
+    document.getElementById('reset-button').addEventListener('click', resetCalculator);
+});
