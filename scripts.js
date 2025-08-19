@@ -41,7 +41,7 @@ function parseValue(input) {
         case 'm': // Milli
             parsedValue *= 1e-3;
             break;
-        case 'u': // Mikro (μ)
+        case 'u': // Mikro (u)
             parsedValue *= 1e-6;
             break;
         case 'n': // Nano
@@ -57,7 +57,7 @@ function parseValue(input) {
     return { value: parsedValue, isLReactance, isCReactance, isImpedance, isPower };
 }
 
-// Funktion til at formatere et tal med enheder (H, F, Ω, osv.)
+// Funktion til at formatere et tal med enheder (H, F, Ohm, osv.)
 function formatValue(value, unitType) {
     if (value === null || isNaN(value)) {
         return 'N/A';
@@ -70,7 +70,7 @@ function formatValue(value, unitType) {
         case 'V': unit = 'V'; break;
         case 'A': unit = 'A'; break;
         case 'Hz': unit = 'Hz'; break;
-        case 'Ohm': unit = 'Ω'; break;
+        case 'Ohm': unit = 'Ohm'; break;
         case 'H': unit = 'H'; break;
         case 'F': unit = 'F'; break;
         case 'W': unit = 'W'; break;
@@ -94,7 +94,7 @@ function formatValue(value, unitType) {
         suffix = 'm';
         value /= 1e-3;
     } else if (Math.abs(value) >= 1e-6) {
-        suffix = 'μ';
+        suffix = 'u';
         value /= 1e-6;
     } else if (Math.abs(value) >= 1e-9) {
         suffix = 'n';
@@ -191,8 +191,8 @@ function calculateSeriesRLC() {
     // Femte trin: Byg resultatstrengen
     resultOutput += `--- Serie Kredsløb ---\n\n`;
     resultOutput += `**Formler anvendt:**\n`;
-    resultOutput += `•  Induktiv reaktans (Xl): Xl = 2 * π * f * L\n`;
-    resultOutput += `•  Kapacitiv reaktans (Xc): Xc = 1 / (2 * π * f * C)\n`;
+    resultOutput += `•  Induktiv reaktans (Xl): Xl = 2 * pi * f * L\n`;
+    resultOutput += `•  Kapacitiv reaktans (Xc): Xc = 1 / (2 * pi * f * C)\n`;
     resultOutput += `•  Total impedans (Z): Z = sqrt(R^2 + (Xl - Xc)^2)\n`;
     resultOutput += `•  Total strøm (I): I = U / Z\n`;
     resultOutput += `•  Spændingsfald over R (Ur): Ur = I * R\n`;
@@ -200,7 +200,7 @@ function calculateSeriesRLC() {
     resultOutput += `•  Spændingsfald over C (Uc): Uc = I * Xc\n`;
     resultOutput += `•  Nytteeffekt (P): P = I^2 * R\n`;
     resultOutput += `•  Tilsyneladende effekt (S): S = U * I\n`;
-    resultOutput += `•  Reaktiv effekt (Q): Q = I^2 * |Xl - Xc|\n`;
+    resultOutput += `•  Reaktiv effekt (Q): Q = I^2 * abs(Xl - Xc)\n`;
     resultOutput += `•  Effektfaktor (cos φ): cos(φ) = P / S\n`;
     resultOutput += `•  Faseforskydningsvinkel (φ): φ = arccos(cos(φ))\n\n`;
     
@@ -278,8 +278,8 @@ function calculateParallelRLC() {
     // Fjerde trin: Byg resultatstrengen
     resultOutput += `--- Parallel Kredsløb ---\n\n`;
     resultOutput += `**Formler anvendt:**\n`;
-    resultOutput += `•  Induktiv reaktans (Xl): Xl = 2 * π * f * L\n`;
-    resultOutput += `•  Kapacitiv reaktans (Xc): Xc = 1 / (2 * π * f * C)\n`;
+    resultOutput += `•  Induktiv reaktans (Xl): Xl = 2 * pi * f * L\n`;
+    resultOutput += `•  Kapacitiv reaktans (Xc): Xc = 1 / (2 * pi * f * C)\n`;
     resultOutput += `•  Strøm gennem R (Ir): Ir = U / R\n`;
     resultOutput += `•  Strøm gennem L (Il): Il = U / Xl\n`;
     resultOutput += `•  Strøm gennem C (Ic): Ic = U / Xc\n`;
@@ -287,7 +287,7 @@ function calculateParallelRLC() {
     resultOutput += `•  Total impedans (Z): Z = U / I\n`;
     resultOutput += `•  Nytteeffekt (P): P = U * Ir\n`;
     resultOutput += `•  Tilsyneladende effekt (S): S = U * I\n`;
-    resultOutput += `•  Reaktiv effekt (Q): Q = U * |Il - Ic|\n`;
+    resultOutput += `•  Reaktiv effekt (Q): Q = U * abs(Il - Ic)\n`;
     resultOutput += `•  Effektfaktor (cos φ): cos(φ) = P / S\n`;
     resultOutput += `•  Faseforskydningsvinkel (φ): φ = arctan((Il-Ic) / Ir)\n\n`;
 
