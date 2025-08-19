@@ -9,22 +9,23 @@
 // Funktion til at parse en værdi med enhed (k, M, m, u, n, p, l for XL, c for XC, z for Z)
 function parseValue(input) {
     if (input === null || input === undefined || input.trim() === '') {
-        return { value: 0, isLReactance: false, isCReactance: false, isImpedance: false };
+        return { value: 0, isLReactance: false, isCReactance: false, isImpedance: false, isPower: false };
     }
     
     const rawValue = String(input).trim().toLowerCase();
     
     const isLReactance = rawValue.endsWith('l');
     const isCReactance = rawValue.endsWith('c');
+    const isPower = rawValue.endsWith('w') || rawValue.endsWith('s') || rawValue.endsWith('q');
     
     // Forhindrer parseren i at behandle et tal som impedans medmindre det kommer fra impedansfeltet
     const isImpedance = rawValue.endsWith('z') || (document.getElementById('impedance').value.trim() === input.trim());
 
-    const valueString = isLReactance || isCReactance || isImpedance ? rawValue.slice(0, -1) : rawValue;
+    const valueString = isLReactance || isCReactance || isImpedance || isPower ? rawValue.slice(0, -1) : rawValue;
     const value = parseFloat(valueString || rawValue);
 
     if (isNaN(value)) {
-        return { value: 0, isLReactance: false, isCReactance: false, isImpedance: false };
+        return { value: 0, isLReactance: false, isCReactance: false, isImpedance: false, isPower: false };
     }
 
     let parsedValue = value;
@@ -55,7 +56,7 @@ function parseValue(input) {
             break;
     }
     
-    return { value: parsedValue, isLReactance, isCReactance, isImpedance };
+    return { value: parsedValue, isLReactance, isCReactance, isImpedance, isPower };
 }
 
 // Opdateret funktion til at formatere et tal med enheder (H, F, Ω, osv.)
