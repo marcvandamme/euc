@@ -171,7 +171,7 @@ function calculateSeriesRLC() {
     if (isImpedance && impedance > 0) {
         totalImpedance = impedance;
     } else {
-        totalImpedance = Math.sqrt(resistance * resistance + Math.pow(xL - xC, 2));
+        totalImpedance = Math.sqrt(Math.pow(resistance, 2) + Math.pow(xL - xC, 2));
     }
     
     current = voltage / totalImpedance;
@@ -198,9 +198,9 @@ function calculateSeriesRLC() {
     resultOutput += `•  Spændingsfald over R (Ur): Ur = I * R\n`;
     resultOutput += `•  Spændingsfald over L (Ul): Ul = I * Xl\n`;
     resultOutput += `•  Spændingsfald over C (Uc): Uc = I * Xc\n`;
-    resultOutput += `•  Nytteeffekt (P): P = U * I * cos(φ)\n`;
+    resultOutput += `•  Nytteeffekt (P): P = I^2 * R\n`;
     resultOutput += `•  Tilsyneladende effekt (S): S = U * I\n`;
-    resultOutput += `•  Reaktiv effekt (Q): Q = U * I * sin(φ)\n`;
+    resultOutput += `•  Reaktiv effekt (Q): Q = I^2 * |Xl - Xc|\n`;
     resultOutput += `•  Effektfaktor (cos φ): cos(φ) = P / S\n`;
     resultOutput += `•  Faseforskydningsvinkel (φ): φ = arccos(cos(φ))\n\n`;
     
@@ -294,5 +294,40 @@ function calculateParallelRLC() {
     resultOutput += `**Indtastede værdier:**\n`;
     resultOutput += `Spænding (U): ${formatValue(voltage, 'V')}\n`;
     resultOutput += `Modstand (R): ${formatValue(resistance, 'Ohm')}\n`;
-Output:
-... (rest of the code) ...
+    resultOutput += `Kapacitans (C): ${isCReactance ? `${formatValue(capacitance, 'Ohm')} (Xc)` : formatValue(capacitance, 'F')}\n`;
+    resultOutput += `Induktans (L): ${isLReactance ? `${formatValue(inductance, 'Ohm')} (Xl)` : formatValue(inductance, 'H')}\n`;
+    resultOutput += `Impedans (Z): ${isImpedance ? `${formatValue(impedance, 'Ohm')} (Givet)` : 'Beregnet'}\n`;
+    resultOutput += `Frekvens (f): ${formatValue(frequency, 'Hz')}\n\n`;
+
+    resultOutput += `**Beregnet reaktans og delstrømme:**\n`;
+    resultOutput += `•  Kapacitiv reaktans (Xc): ${formatValue(xC, 'Ohm')}\n`;
+    resultOutput += `•  Induktiv reaktans (Xl): ${formatValue(xL, 'Ohm')}\n`;
+    resultOutput += `•  Strøm gennem R (Ir): ${formatValue(iR, 'A')}\n`;
+    resultOutput += `•  Strøm gennem L (Il): ${formatValue(iL, 'A')}\n`;
+    resultOutput += `•  Strøm gennem C (Ic): ${formatValue(iC, 'A')}\n\n`;
+    
+    resultOutput += `**Endelige resultater:**\n`;
+    resultOutput += `•  Total impedans (Z): ${formatValue(totalImpedance, 'Ohm')}\n`;
+    resultOutput += `•  Total strøm (I): ${formatValue(totalCurrent, 'A')}\n`;
+    resultOutput += `•  Faseforskydningsvinkel (φ): ${phaseAngleDeg.toFixed(3)} °\n`;
+    resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
+    resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
+    resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
+    resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
+    
+    document.getElementById('result').textContent = resultOutput;
+}
+
+// Vent, indtil DOM'en er fuldt indlæst, før du tilføjer event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    const calculateButton = document.getElementById('calculate-button');
+    const resetButton = document.getElementById('reset-button');
+    
+    if (calculateButton) {
+        calculateButton.addEventListener('click', updateCalculator);
+    }
+    
+    if (resetButton) {
+        resetButton.addEventListener('click', resetCalculator);
+    }
+});
