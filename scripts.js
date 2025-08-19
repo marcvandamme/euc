@@ -142,12 +142,11 @@ function getValues() {
 
 // Opdaterer lommeregneren baseret på de indtastede værdier
 function updateCalculator() {
-    const { voltage, frequency, resistance, capacitance, inductance, impedance } = getValues();
+    const { voltage, frequency, resistance, capacitance, inductance, impedance, isImpedance } = getValues();
     const resultBox = document.getElementById('result');
     
-    // Check for gyldige input
-    const hasValues = voltage > 0 && frequency > 0 && (resistance > 0 || capacitance > 0 || inductance > 0 || impedance > 0);
-    if (!hasValues) {
+    // Check for gyldige input. Mindst én af R, L, C, Z skal være til stede.
+    if (voltage <= 0 || frequency <= 0 || (resistance <= 0 && capacitance <= 0 && inductance <= 0 && impedance <= 0)) {
         resultBox.textContent = "Indtast venligst spænding, frekvens, og mindst én af R, L, C, eller Z.";
         return;
     }
@@ -275,7 +274,7 @@ function calculateParallelRLC() {
         iL = iReactive; // I et RL-kredsløb er den reaktive strøm = IL
         xL = iL > 0 ? voltage / iL : 0;
         L = xL > 0 ? xL / (2 * Math.PI * frequency) : 0;
-
+        
     } else {
         totalCurrent = Math.sqrt(iR**2 + (iC - iL)**2);
         totalImpedance = totalCurrent > 0 ? voltage / totalCurrent : 0;
