@@ -149,7 +149,7 @@ function getValues() {
         frequency,
         isLReactance: inductanceResult.isLReactance,
         isCReactance: capacitanceResult.isCReactance,
-        isImpedance: impedanceResult.isImpedance || impedanceResult.value > 0
+        isImpedance: impedanceResult.isImpedance || (document.getElementById('impedance').value.trim() !== '' && impedanceResult.value > 0)
     };
 }
 
@@ -244,7 +244,7 @@ function calculateSeriesRLC() {
     resultOutput += `•  Faseforskydningsvinkel (φ): ${phaseAngleDeg.toFixed(3)} °\n`;
     resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
     resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
-    resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
+d    resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
     resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
     
     // Yderligere beregninger, hvis reaktansen er givet
