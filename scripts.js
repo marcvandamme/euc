@@ -24,7 +24,7 @@ function parseValue(input) {
     const value = parseFloat(valueString || rawValue);
 
     if (isNaN(value)) {
-        return { value: 0, isLReactance: false, isCReactance: false, isImpedance: false, isPower: false };
+        return { value: 0, isLReactance, isCReactance, isImpedance, isPower };
     }
 
     let parsedValue = value;
@@ -57,7 +57,7 @@ function parseValue(input) {
     return { value: parsedValue, isLReactance, isCReactance, isImpedance, isPower };
 }
 
-// Opdateret funktion til at formatere et tal med enheder (H, F, Ω, osv.)
+// Funktion til at formatere et tal med enheder (H, F, Ω, osv.)
 function formatValue(value, unitType) {
     if (value === null || isNaN(value)) {
         return 'N/A';
@@ -67,36 +67,16 @@ function formatValue(value, unitType) {
     let suffix = '';
 
     switch(unitType) {
-        case 'V':
-            unit = 'V';
-            break;
-        case 'A':
-            unit = 'A';
-            break;
-        case 'Hz':
-            unit = 'Hz';
-            break;
-        case 'Ohm':
-            unit = 'Ω';
-            break;
-        case 'H':
-            unit = 'H';
-            break;
-        case 'F':
-            unit = 'F';
-            break;
-        case 'W':
-            unit = 'W';
-            break;
-        case 'VA':
-            unit = 'VA';
-            break;
-        case 'var':
-            unit = 'var';
-            break;
-        default:
-            unit = '';
-            break;
+        case 'V': unit = 'V'; break;
+        case 'A': unit = 'A'; break;
+        case 'Hz': unit = 'Hz'; break;
+        case 'Ohm': unit = 'Ω'; break;
+        case 'H': unit = 'H'; break;
+        case 'F': unit = 'F'; break;
+        case 'W': unit = 'W'; break;
+        case 'VA': unit = 'VA'; break;
+        case 'var': unit = 'var'; break;
+        default: unit = ''; break;
     }
 
     if (Math.abs(value) >= 1e9) {
@@ -140,197 +120,29 @@ function getValues() {
         isLReactance: parseValue(document.getElementById('inductance').value).isLReactance,
         isCReactance: parseValue(document.getElementById('capacitance').value).isCReactance,
         isImpedance: parseValue(document.getElementById('impedance').value).isImpedance,
+        isPower: parseValue(document.getElementById('power').value).isPower,
     };
 }
 
-// Opdaterer lommeregneren baseret på de indtastede værdier
+// Hovedfunktion, der opdaterer lommeregneren baseret på kredsløbstype
 function updateCalculator() {
-    const { voltage, frequency } = getValues();
+    const { voltage, frequency, resistance, capacitance, inductance, impedance, power } = getValues();
     const resultBox = document.getElementById('result');
     
-    const inputs = getValues();
-    const knownValues = [inputs.resistance, inputs.capacitance, inputs.inductance, inputs.impedance, inputs.power].filter(v => v > 0);
-    
-    if (voltage <= 0 || frequency <= 0) {
-        resultBox.textContent = "Indtast venligst spænding og frekvens.";
-        return;
-    }
-    
-    if (knownValues.length < 1) {
-        resultBox.textContent = "Indtast venligst mindst én værdi udover spænding og frekvens (R, C, L, Z eller P).";
+    // Fejlhåndtering for grundlæggende input
+    const knownValuesCount = [resistance, capacitance, inductance, impedance, power].filter(v => v > 0).length;
+    if (voltage <= 0 || frequency <= 0 || knownValuesCount < 1) {
+        resultBox.textContent = "Indtast venligst spænding, frekvens, og mindst én anden værdi.";
         return;
     }
 
     const selectedCircuitType = document.getElementById('circuit-select').value;
     
-    let resultOutput = '';
-    
     if (selectedCircuitType === 'series') {
-        // Logik for seriekredsløb
-        let { voltage, resistance, capacitance, inductance, frequency, isLReactance, isCReactance, impedance, isImpedance, power } = getValues();
-        let totalImpedance, current, xL = 0, xC = 0;
-
-        xL = isLReactance ? inductance : (inductance > 0 ? 2 * Math.PI * frequency * inductance : 0);
-        xC = isCReactance ? capacitance : (capacitance > 0 ? 1 / (2 * Math.PI * frequency * capacitance) : 0);
-        
-        if (impedance > 0) {
-            totalImpedance = impedance;
-            current = voltage / totalImpedance;
-            if (Math.abs(totalImpedance - Math.sqrt(resistance * resistance + Math.pow(xL - xC, 2))) > 0.1) {
-                 resultOutput += `Advarsel: De indtastede værdier er muligvis ikke i overensstemmelse med hinanden.\n`;
-            }
-        } else {
-            totalImpedance = Math.sqrt(resistance * resistance + Math.pow(xL - xC, 2));
-            current = voltage / totalImpedance;
-        }
-
-        if (totalImpedance === 0) {
-            resultBox.textContent = "Fejl: Total impedans kan ikke være nul.";
-            return;
-        }
-
-        const realPower = current * current * resistance;
-        const apparentPower = voltage * current;
-        const reactivePower = Math.abs(current * current * (xL - xC));
-        const powerFactor = apparentPower > 0 ? realPower / apparentPower : 0;
-        const phaseAngleDeg = (powerFactor !== 0) ? Math.acos(powerFactor) * (180 / Math.PI) : 0;
-
-        const uR = current * resistance;
-        const uL = current * xL;
-        const uC = current * xC;
-
-        resultOutput += `--- Serie Kredsløb ---\n\n`;
-        resultOutput += `Indtastede værdier:\n`;
-        resultOutput += `Spænding (U): ${formatValue(voltage, 'V')}\n`;
-        resultOutput += `Modstand (R): ${formatValue(resistance, 'Ohm')}\n`;
-        resultOutput += `Kapacitans (C): ${isCReactance ? `${formatValue(capacitance, 'Ohm')} (Xc)` : formatValue(capacitance, 'F')}\n`;
-        resultOutput += `Induktans (L): ${isLReactance ? `${formatValue(inductance, 'Ohm')} (Xl)` : formatValue(inductance, 'H')}\n`;
-        resultOutput += `Impedans (Z): ${isImpedance ? `${formatValue(impedance, 'Ohm')} (Givet)` : 'Beregnet'}\n`;
-        resultOutput += `Frekvens (f): ${formatValue(frequency, 'Hz')}\n\n`;
-        
-        resultOutput += `**Beregnet reaktans og spændingsfald:**\n`;
-        resultOutput += `•  Kapacitiv reaktans (Xc): ${formatValue(xC, 'Ohm')}\n`;
-        resultOutput += `•  Induktiv reaktans (Xl): ${formatValue(xL, 'Ohm')}\n`;
-        resultOutput += `•  Spændingsfald over R (Ur): ${formatValue(uR, 'V')}\n`;
-        resultOutput += `•  Spændingsfald over L (Ul): ${formatValue(uL, 'V')}\n`;
-        resultOutput += `•  Spændingsfald over C (Uc): ${formatValue(uC, 'V')}\n\n`;
-        
-        resultOutput += `**Endelige resultater:**\n`;
-        resultOutput += `•  Total impedans (Z): ${formatValue(totalImpedance, 'Ohm')}\n`;
-        resultOutput += `•  Total strøm (I): ${formatValue(current, 'A')}\n`;
-        resultOutput += `•  Faseforskydningsvinkel (φ): ${phaseAngleDeg.toFixed(3)} °\n`;
-        resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
-        resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
-        resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
-        resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
-        
-        if (inductance > 0 && !isLReactance) {
-            resultOutput += `•  **Beregnet Induktans (L):** ${formatValue(inductance, 'H')}\n`;
-        }
-        if (capacitance > 0 && !isCReactance) {
-            resultOutput += `•  **Beregnet Kapacitans (C):** ${formatValue(capacitance, 'F')}\n`;
-        }
-
+        calculateSeriesRLC();
     } else if (selectedCircuitType === 'parallel') {
-        // Logik for parallelkredsløb
-        let { voltage, resistance, capacitance, inductance, frequency, isLReactance, isCReactance, impedance, isImpedance, power } = getValues();
-        let totalImpedance, totalCurrent, iR = 0, iL = 0, iC = 0, xL = 0, xC = 0;
-
-        if (resistance > 0) {
-            iR = voltage / resistance;
-        }
-        if (inductance > 0) {
-            xL = isLReactance ? inductance : (2 * Math.PI * frequency * inductance);
-            if (xL > 0) iL = voltage / xL;
-        }
-        if (capacitance > 0) {
-            xC = isCReactance ? capacitance : (1 / (2 * Math.PI * frequency * capacitance));
-            if (xC > 0) iC = voltage / xC;
-        }
-
-        if (power > 0 && resistance === 0) {
-            iR = power / voltage;
-            if (iR > 0) resistance = voltage / iR;
-        } else if (power > 0) {
-            iR = power / voltage;
-        }
-
-        if (isImpedance && impedance > 0) {
-            totalImpedance = impedance;
-            totalCurrent = voltage / totalImpedance;
-
-            const iReactiveSquared = Math.pow(totalCurrent, 2) - Math.pow(iR, 2);
-
-            if (iReactiveSquared > 0) {
-                const iReactive = Math.sqrt(iReactiveSquared);
-                if (iL === 0 && iC === 0) {
-                    iL = iReactive;
-                    xL = voltage / iL;
-                    inductance = xL / (2 * Math.PI * frequency);
-                }
-            }
-        } else {
-            totalCurrent = Math.sqrt(Math.pow(iR, 2) + Math.pow(iL - iC, 2));
-            if (totalCurrent > 0) totalImpedance = voltage / totalCurrent;
-        }
-        
-        if (isNaN(totalCurrent) || isNaN(totalImpedance)) {
-            resultBox.textContent = "Fejl: Ikke nok information til at beregne.";
-            return;
-        }
-
-        const realPower = voltage * iR;
-        const apparentPower = voltage * totalCurrent;
-        const reactivePower = Math.abs(voltage * (iL - iC));
-        const powerFactor = apparentPower > 0 ? realPower / apparentPower : 0;
-        let phaseAngleDeg = 0;
-        
-        if (iR !== 0) {
-            phaseAngleDeg = Math.atan((iL - iC) / iR) * (180 / Math.PI);
-        } else {
-            if (iL > iC) { phaseAngleDeg = 90; }
-            else if (iC > iL) { phaseAngleDeg = -90; }
-            else { phaseAngleDeg = 0; }
-        }
-
-        resultOutput += `--- Parallel Kredsløb ---\n\n`;
-        resultOutput += `Indtastede værdier:\n`;
-        resultOutput += `Spænding (U): ${formatValue(voltage, 'V')}\n`;
-        resultOutput += `Modstand (R): ${formatValue(resistance, 'Ohm')}\n`;
-        resultOutput += `Kapacitans (C): ${isCReactance ? `${formatValue(capacitance, 'Ohm')} (Xc)` : formatValue(capacitance, 'F')}\n`;
-        resultOutput += `Induktans (L): ${isLReactance ? `${formatValue(inductance, 'Ohm')} (Xl)` : formatValue(inductance, 'H')}\n`;
-        resultOutput += `Impedans (Z): ${isImpedance ? `${formatValue(impedance, 'Ohm')} (Givet)` : 'Beregnet'}\n`;
-        resultOutput += `Nytteeffekt (P): ${formatValue(power, 'W')}\n`;
-        resultOutput += `Frekvens (f): ${formatValue(frequency, 'Hz')}\n\n`;
-
-        resultOutput += `**Beregnet reaktans og delstrømme:**\n`;
-        resultOutput += `•  Kapacitiv reaktans (Xc): ${formatValue(xC, 'Ohm')}\n`;
-        resultOutput += `•  Induktiv reaktans (Xl): ${formatValue(xL, 'Ohm')}\n`;
-        resultOutput += `•  Strøm gennem R (Ir): ${formatValue(iR, 'A')}\n`;
-        resultOutput += `•  Strøm gennem L (Il): ${formatValue(iL, 'A')}\n`;
-        resultOutput += `•  Strøm gennem C (Ic): ${formatValue(iC, 'A')}\n\n`;
-        
-        resultOutput += `**Endelige resultater:**\n`;
-        resultOutput += `•  Total impedans (Z): ${formatValue(totalImpedance, 'Ohm')}\n`;
-        resultOutput += `•  Total strøm (I): ${formatValue(totalCurrent, 'A')}\n`;
-        resultOutput += `•  Faseforskydningsvinkel (φ): ${phaseAngleDeg.toFixed(3)} °\n`;
-        resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
-        resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
-        resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
-        resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
-        
-        if (isCReactance && capacitance > 0) {
-            resultOutput += `•  **Beregnet Kapacitans (C):** ${formatValue(capacitance, 'F')}\n`;
-        }
-        if (isLReactance && inductance > 0) {
-            resultOutput += `•  **Beregnet Induktans (L):** ${formatValue(inductance, 'H')}\n`;
-        }
-        if (isImpedance && impedance > 0 && inductance > 0) {
-            resultOutput += `•  **Beregnet Induktans (L):** ${formatValue(inductance, 'H')}\n`;
-        }
+        calculateParallelRLC();
     }
-    
-    document.getElementById('result').textContent = resultOutput;
 }
 
 // Nulstiller alle inputfelter og resultatvisningen
@@ -343,6 +155,139 @@ function resetCalculator() {
     document.getElementById('impedance').value = '';
     document.getElementById('power').value = '';
     document.getElementById('result').textContent = 'Dine resultater vil vises her...';
+}
+
+// Generel beregning for seriekredsløb
+function calculateSeriesRLC() {
+    const { voltage, resistance, capacitance, inductance, frequency, isLReactance, isCReactance, impedance, isImpedance } = getValues();
+    let resultOutput = '';
+    let totalImpedance, current, xL = 0, xC = 0;
+
+    // Første trin: Beregn reaktans baseret på L og C
+    xL = isLReactance ? inductance : (inductance > 0 ? 2 * Math.PI * frequency * inductance : 0);
+    xC = isCReactance ? capacitance : (capacitance > 0 ? 1 / (2 * Math.PI * frequency * capacitance) : 0);
+    
+    // Andet trin: Beregn total impedans og strøm
+    if (isImpedance && impedance > 0) {
+        totalImpedance = impedance;
+    } else {
+        totalImpedance = Math.sqrt(resistance * resistance + Math.pow(xL - xC, 2));
+    }
+    
+    current = voltage / totalImpedance;
+
+    // Tredje trin: Beregn effekter og vinkler
+    const realPower = current * current * resistance;
+    const apparentPower = voltage * current;
+    const reactivePower = Math.abs(current * current * (xL - xC));
+    const powerFactor = apparentPower > 0 ? realPower / apparentPower : 0;
+    const phaseAngleDeg = (powerFactor !== 0) ? Math.acos(powerFactor) * (180 / Math.PI) : 0;
+
+    // Fjerde trin: Beregn spændingsfald
+    const uR = current * resistance;
+    const uL = current * xL;
+    const uC = current * xC;
+
+    // Femte trin: Byg resultatstrengen
+    resultOutput += `--- Serie Kredsløb ---\n\n`;
+    resultOutput += `Indtastede værdier:\n`;
+    resultOutput += `Spænding (U): ${formatValue(voltage, 'V')}\n`;
+    resultOutput += `Modstand (R): ${formatValue(resistance, 'Ohm')}\n`;
+    resultOutput += `Kapacitans (C): ${isCReactance ? `${formatValue(capacitance, 'Ohm')} (Xc)` : formatValue(capacitance, 'F')}\n`;
+    resultOutput += `Induktans (L): ${isLReactance ? `${formatValue(inductance, 'Ohm')} (Xl)` : formatValue(inductance, 'H')}\n`;
+    resultOutput += `Impedans (Z): ${isImpedance ? `${formatValue(impedance, 'Ohm')} (Givet)` : 'Beregnet'}\n`;
+    resultOutput += `Frekvens (f): ${formatValue(frequency, 'Hz')}\n\n`;
+    
+    resultOutput += `**Beregnet reaktans og spændingsfald:**\n`;
+    resultOutput += `•  Kapacitiv reaktans (Xc): ${formatValue(xC, 'Ohm')}\n`;
+    resultOutput += `•  Induktiv reaktans (Xl): ${formatValue(xL, 'Ohm')}\n`;
+    resultOutput += `•  Spændingsfald over R (Ur): ${formatValue(uR, 'V')}\n`;
+    resultOutput += `•  Spændingsfald over L (Ul): ${formatValue(uL, 'V')}\n`;
+    resultOutput += `•  Spændingsfald over C (Uc): ${formatValue(uC, 'V')}\n\n`;
+    
+    resultOutput += `**Endelige resultater:**\n`;
+    resultOutput += `•  Total impedans (Z): ${formatValue(totalImpedance, 'Ohm')}\n`;
+    resultOutput += `•  Total strøm (I): ${formatValue(current, 'A')}\n`;
+    resultOutput += `•  Faseforskydningsvinkel (φ): ${phaseAngleDeg.toFixed(3)} °\n`;
+    resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
+    resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
+    resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
+    resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
+    
+    document.getElementById('result').textContent = resultOutput;
+}
+
+// Forbedret beregning for parallelkredsløb
+function calculateParallelRLC() {
+    const { voltage, resistance, capacitance, inductance, frequency, isLReactance, isCReactance, impedance, isImpedance } = getValues();
+    let resultOutput = '';
+    
+    let totalImpedance, totalCurrent, iR = 0, iL = 0, iC = 0, xL = 0, xC = 0;
+
+    // Første trin: Beregn reaktanser og grenstrømme
+    if (resistance > 0) iR = voltage / resistance;
+    
+    if (inductance > 0) {
+        xL = isLReactance ? inductance : (2 * Math.PI * frequency * inductance);
+        if (xL > 0) iL = voltage / xL;
+    }
+    
+    if (capacitance > 0) {
+        xC = isCReactance ? capacitance : (1 / (2 * Math.PI * frequency * capacitance));
+        if (xC > 0) iC = voltage / xC;
+    }
+
+    // Andet trin: Beregn total strøm og impedans
+    if (isImpedance && impedance > 0) {
+        totalImpedance = impedance;
+        totalCurrent = voltage / totalImpedance;
+    } else {
+        totalCurrent = Math.sqrt(Math.pow(iR, 2) + Math.pow(iL - iC, 2));
+        if (totalCurrent > 0) totalImpedance = voltage / totalCurrent;
+    }
+
+    // Tredje trin: Beregn effekter og vinkler
+    const realPower = voltage * iR;
+    const apparentPower = voltage * totalCurrent;
+    const reactivePower = Math.abs(voltage * (iL - iC));
+    const powerFactor = apparentPower > 0 ? realPower / apparentPower : 0;
+    
+    let phaseAngleDeg = 0;
+    if (iR !== 0) {
+        phaseAngleDeg = Math.atan((iL - iC) / iR) * (180 / Math.PI);
+    } else if (iL > iC) {
+        phaseAngleDeg = 90;
+    } else if (iC > iL) {
+        phaseAngleDeg = -90;
+    }
+
+    // Fjerde trin: Byg resultatstrengen
+    resultOutput += `--- Parallel Kredsløb ---\n\n`;
+    resultOutput += `Indtastede værdier:\n`;
+    resultOutput += `Spænding (U): ${formatValue(voltage, 'V')}\n`;
+    resultOutput += `Modstand (R): ${formatValue(resistance, 'Ohm')}\n`;
+    resultOutput += `Kapacitans (C): ${isCReactance ? `${formatValue(capacitance, 'Ohm')} (Xc)` : formatValue(capacitance, 'F')}\n`;
+    resultOutput += `Induktans (L): ${isLReactance ? `${formatValue(inductance, 'Ohm')} (Xl)` : formatValue(inductance, 'H')}\n`;
+    resultOutput += `Impedans (Z): ${isImpedance ? `${formatValue(impedance, 'Ohm')} (Givet)` : 'Beregnet'}\n`;
+    resultOutput += `Frekvens (f): ${formatValue(frequency, 'Hz')}\n\n`;
+
+    resultOutput += `**Beregnet reaktans og delstrømme:**\n`;
+    resultOutput += `•  Kapacitiv reaktans (Xc): ${formatValue(xC, 'Ohm')}\n`;
+    resultOutput += `•  Induktiv reaktans (Xl): ${formatValue(xL, 'Ohm')}\n`;
+    resultOutput += `•  Strøm gennem R (Ir): ${formatValue(iR, 'A')}\n`;
+    resultOutput += `•  Strøm gennem L (Il): ${formatValue(iL, 'A')}\n`;
+    resultOutput += `•  Strøm gennem C (Ic): ${formatValue(iC, 'A')}\n\n`;
+    
+    resultOutput += `**Endelige resultater:**\n`;
+    resultOutput += `•  Total impedans (Z): ${formatValue(totalImpedance, 'Ohm')}\n`;
+    resultOutput += `•  Total strøm (I): ${formatValue(totalCurrent, 'A')}\n`;
+    resultOutput += `•  Faseforskydningsvinkel (φ): ${phaseAngleDeg.toFixed(3)} °\n`;
+    resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
+    resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
+    resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
+    resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
+    
+    document.getElementById('result').textContent = resultOutput;
 }
 
 // Vent, indtil DOM'en er fuldt indlæst, før du tilføjer event listeners
