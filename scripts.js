@@ -260,4 +260,95 @@ function calculateParallelRLC() {
     xL = isLReactance ? inductance : (inductance > 0 ? 2 * Math.PI * frequency * inductance : 0);
     
     // Beregn strømme, hvis reaktanser er givet
-    const iR = voltage > 0 && resistance
+    const iR = voltage > 0 && resistance > 0 ? voltage / resistance : 0;
+    const iC = voltage > 0 && xC > 0 ? voltage / xC : 0;
+    const iL = voltage > 0 && xL > 0 ? voltage / xL : 0;
+
+    // Andet trin: Beregn ud fra impedans, hvis den er givet
+    if (isImpedance && impedance > 0) {
+        totalImpedance = impedance;
+        totalCurrent = voltage / totalImpedance;
+        
+        // Find den induktive strøm ved hjælp af total strøm og strømmen gennem R
+        const iReactiveSquared = totalCurrent**2 - iR**2;
+        const iReactive = Math.sqrt(Math.abs(iReactiveSquared)); // Brug Math.abs for at undgå fejl ved små unøjagtigheder
+        iL = iReactive; // I et RL-kredsløb er den reaktive strøm = IL
+        xL = iL > 0 ? voltage / iL : 0;
+        L = xL > 0 ? xL / (2 * Math.PI * frequency) : 0;
+
+    } else {
+        totalCurrent = Math.sqrt(iR**2 + (iC - iL)**2);
+        totalImpedance = totalCurrent > 0 ? voltage / totalCurrent : 0;
+        L = inductance;
+        C = capacitance;
+    }
+
+    // Tredje trin: Fortsæt med resten af beregningerne
+    let powerFactor = (totalCurrent > 0) ? iR / totalCurrent : 0;
+    let phaseAngleDeg = 0;
+    if (iR !== 0) {
+        phaseAngleDeg = Math.atan((iC - iL) / iR) * (180 / Math.PI);
+    } else {
+        if (iC > iL) { phaseAngleDeg = 90; }
+        else if (iL > iC) { phaseAngleDeg = -90; }
+        else { phaseAngleDeg = 0; }
+    }
+    
+    const realPower = voltage * iR;
+    const apparentPower = voltage * totalCurrent;
+    const reactivePower = Math.abs(voltage * (iC - iL));
+
+    resultOutput += `--- Parallel Kredsløb ---\n\n`;
+    resultOutput += `Indtastede værdier:\n`;
+    resultOutput += `Spænding (U): ${formatValue(voltage, 'V')}\n`;
+    resultOutput += `Modstand (R): ${formatValue(resistance, 'Ohm')}\n`;
+    resultOutput += `Kapacitans (C): ${isCReactance ? `${formatValue(capacitance, 'Ohm')} (Xc)` : formatValue(capacitance, 'F')}\n`;
+    resultOutput += `Induktans (L): ${isLReactance ? `${formatValue(inductance, 'Ohm')} (Xl)` : formatValue(inductance, 'H')}\n`;
+    resultOutput += `Impedans (Z): ${isImpedance ? `${formatValue(impedance, 'Ohm')} (Givet)` : 'Beregnet'}\n`;
+    resultOutput += `Frekvens (f): ${formatValue(frequency, 'Hz')}\n\n`;
+
+    resultOutput += `**Formler brugt i rækkefølge:**\n\n`;
+    resultOutput += `1. **Beregning af strømme:** Først finder vi strømmen gennem modstanden, da den er i fase med spændingen.\n`;
+    resultOutput += `   •  Strøm gennem R: Ir = U / R\n\n`;
+    if (isImpedance) {
+        resultOutput += `2. **Beregning af total strøm og reaktans:** Da den totale impedans (Z) er givet, finder vi den totale strøm. Derefter bruger vi den totale strøm og strømmen gennem R til at finde den reaktive strøm (som er lig med strømmen gennem L, da vi antager en ideel spole).\n`;
+        resultOutput += `   •  Total strøm: I(total) = U / Z\n`;
+        resultOutput += `   •  Reaktiv strøm: I(reaktiv) = √(I(total)² - Ir²)\n`;
+        resultOutput += `   •  Induktiv reaktans: Xl = U / I(reaktiv)\n\n`;
+    } else {
+        resultOutput += `2. **Beregning af total strøm og impedans:** Når de enkelte grenstrømme er kendte, kan vi finde den totale strøm ved at bruge Pythagoras' læresætning på strømmene. Derefter bruges Ohms lov til at finde den totale impedans.\n`;
+        resultOutput += `   •  Total strøm: I(total) = √(Ir² + (Ic - Il)²)\n`;
+        resultOutput += `   •  Total impedans: Z = U / I(total)\n\n`;
+    }
+    resultOutput += `3. **Beregning af fasevinkel:** Faseforskydningen mellem total strøm og spænding viser, om kredsløbet er induktivt eller kapacitivt.\n`;
+    resultOutput += `   •  φ = arctan((Ic - Il) / Ir)\n\n`;
+
+    resultOutput += `Beregnet reaktans og delstrømme:\n`;
+    resultOutput += `•  Kapacitiv reaktans (Xc): ${formatValue(xC, 'Ohm')}\n`;
+    resultOutput += `•  Induktiv reaktans (Xl): ${formatValue(xL, 'Ohm')}\n`;
+    resultOutput += `•  Strøm gennem R (Ir): ${formatValue(iR, 'A')}\n`;
+    resultOutput += `•  Strøm gennem L (Il): ${formatValue(iL, 'A')}\n`;
+    resultOutput += `•  Strøm gennem C (Ic): ${formatValue(iC, 'A')}\n\n`;
+    
+    resultOutput += `Endelige resultater:\n`;
+    resultOutput += `•  Total impedans (Z): ${formatValue(totalImpedance, 'Ohm')}\n`;
+    resultOutput += `•  Total strøm (I): ${formatValue(totalCurrent, 'A')}\n`;
+    resultOutput += `•  Faseforskydningsvinkel (φ): ${phaseAngleDeg.toFixed(3)} °\n`;
+    resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
+    resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
+    resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
+    resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
+    
+    // Yderligere beregninger, hvis reaktansen eller impedansen er givet
+    if (isCReactance && capacitance > 0) {
+        resultOutput += `•  **Beregnet Kapacitans (C):** ${formatValue(C, 'F')}\n`;
+    }
+    if (isLReactance && inductance > 0) {
+        resultOutput += `•  **Beregnet Induktans (L):** ${formatValue(L, 'H')}\n`;
+    }
+    if (isImpedance && impedance > 0 && xL > 0) {
+        resultOutput += `•  **Beregnet Induktans (L):** ${formatValue(L, 'H')}\n`;
+    }
+
+    document.getElementById('result').textContent = resultOutput;
+}
