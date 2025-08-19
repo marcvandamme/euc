@@ -151,11 +151,16 @@ function updateCalculator() {
     const inputs = getValues();
     const knownValues = [inputs.resistance, inputs.capacitance, inputs.inductance, inputs.impedance, inputs.power].filter(v => v > 0);
     
-    if (voltage <= 0 || frequency <= 0 || knownValues.length < 2) {
-        resultBox.textContent = "Indtast venligst spænding, frekvens, og mindst to af de andre værdier (R, C, L, Z eller P).";
+    if (voltage <= 0 || frequency <= 0) {
+        resultBox.textContent = "Indtast venligst spænding og frekvens.";
         return;
     }
     
+    if (knownValues.length < 1) {
+        resultBox.textContent = "Indtast venligst mindst én værdi udover spænding og frekvens (R, C, L, Z eller P).";
+        return;
+    }
+
     const selectedCircuitType = document.getElementById('circuit-select').value;
     
     let resultOutput = '';
