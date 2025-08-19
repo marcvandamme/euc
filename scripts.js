@@ -17,10 +17,10 @@ function parseValue(input) {
     const isLReactance = rawValue.endsWith('l');
     const isCReactance = rawValue.endsWith('c');
     
-    // Check for impedans-enhed 'z' eller et rent tal i impedans-feltet
-    const isImpedance = rawValue.endsWith('z') || 
-                        (document.getElementById('impedance') && document.getElementById('impedance').value.trim() === input.trim() && !isNaN(parseFloat(rawValue)));
+    // Forhindrer parseren i at behandle et tal som impedans medmindre det kommer fra impedansfeltet
+    const isImpedance = rawValue.endsWith('z') || (document.getElementById('impedance').value.trim() === input.trim());
 
+    // Fjern enhedsbogstavet, hvis det er en reaktans-enhed
     const valueString = isLReactance || isCReactance || isImpedance ? rawValue.slice(0, -1) : rawValue;
     const value = parseFloat(valueString || rawValue);
 
@@ -157,7 +157,6 @@ function updateCalculator() {
     const { voltage, frequency, resistance, capacitance, inductance, impedance } = getValues();
     const resultBox = document.getElementById('result');
     
-    // Check for gyldige input. Mindst én af R, L, C, Z skal være til stede.
     const hasValues = voltage > 0 && frequency > 0 && (resistance > 0 || capacitance > 0 || inductance > 0 || impedance > 0);
     if (!hasValues) {
         resultBox.textContent = "Indtast venligst spænding, frekvens, og mindst én af R, L, C, eller Z.";
