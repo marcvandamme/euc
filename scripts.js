@@ -191,15 +191,18 @@ function calculateSeriesRLC() {
     // Femte trin: Byg resultatstrengen
     resultOutput += `--- Serie Kredsløb ---\n\n`;
     resultOutput += `**Formler anvendt:**\n`;
-    resultOutput += `•  Induktiv reaktans: $X_L = 2 \cdot \pi \cdot f \cdot L$\n`;
-    resultOutput += `•  Kapacitiv reaktans: $X_C = \\frac{1}{2 \cdot \pi \cdot f \cdot C}$\n`;
-    resultOutput += `•  Total impedans: $Z_{total} = \\sqrt{R^2 + (X_L - X_C)^2}$\n`;
-    resultOutput += `•  Total strøm: $I_{total} = \\frac{U}{Z_{total}}$\n`;
-    resultOutput += `•  Nytteeffekt: $P = I^2 \cdot R$\n`;
-    resultOutput += `•  Tilsyneladende effekt: $S = U \cdot I$\n`;
-    resultOutput += `•  Reaktiv effekt: $Q = I^2 \cdot |X_L - X_C|$\n`;
-    resultOutput += `•  Effektfaktor: $\\cos \\phi = \\frac{P}{S}$\n`;
-    resultOutput += `•  Faseforskydningsvinkel: $\\phi = \\arccos(\\cos \\phi)$\n\n`;
+    resultOutput += `•  Induktiv reaktans (Xl): Xl = 2 * π * f * L\n`;
+    resultOutput += `•  Kapacitiv reaktans (Xc): Xc = 1 / (2 * π * f * C)\n`;
+    resultOutput += `•  Total impedans (Z): Z = sqrt(R^2 + (Xl - Xc)^2)\n`;
+    resultOutput += `•  Total strøm (I): I = U / Z\n`;
+    resultOutput += `•  Spændingsfald over R (Ur): Ur = I * R\n`;
+    resultOutput += `•  Spændingsfald over L (Ul): Ul = I * Xl\n`;
+    resultOutput += `•  Spændingsfald over C (Uc): Uc = I * Xc\n`;
+    resultOutput += `•  Nytteeffekt (P): P = U * I * cos(φ)\n`;
+    resultOutput += `•  Tilsyneladende effekt (S): S = U * I\n`;
+    resultOutput += `•  Reaktiv effekt (Q): Q = U * I * sin(φ)\n`;
+    resultOutput += `•  Effektfaktor (cos φ): cos(φ) = P / S\n`;
+    resultOutput += `•  Faseforskydningsvinkel (φ): φ = arccos(cos(φ))\n\n`;
     
     resultOutput += `**Indtastede værdier:**\n`;
     resultOutput += `Spænding (U): ${formatValue(voltage, 'V')}\n`;
@@ -275,53 +278,21 @@ function calculateParallelRLC() {
     // Fjerde trin: Byg resultatstrengen
     resultOutput += `--- Parallel Kredsløb ---\n\n`;
     resultOutput += `**Formler anvendt:**\n`;
-    resultOutput += `•  Induktiv reaktans: $X_L = 2 \cdot \pi \cdot f \cdot L$\n`;
-    resultOutput += `•  Kapacitiv reaktans: $X_C = \\frac{1}{2 \cdot \pi \cdot f \cdot C}$\n`;
-    resultOutput += `•  Total strøm: $I_{total} = \\sqrt{I_R^2 + (I_L - I_C)^2}$\n`;
-    resultOutput += `•  Total impedans: $Z_{total} = \\frac{U}{I_{total}}$\n`;
-    resultOutput += `•  Nytteeffekt: $P = U \cdot I_R$\n`;
-    resultOutput += `•  Tilsyneladende effekt: $S = U \cdot I_{total}$\n`;
-    resultOutput += `•  Reaktiv effekt: $Q = U \cdot |I_L - I_C|$\n`;
-    resultOutput += `•  Effektfaktor: $\\cos \\phi = \\frac{P}{S}$\n`;
-    resultOutput += `•  Faseforskydningsvinkel: $\\phi = \\arctan(\\frac{I_L-I_C}{I_R})$\n\n`;
+    resultOutput += `•  Induktiv reaktans (Xl): Xl = 2 * π * f * L\n`;
+    resultOutput += `•  Kapacitiv reaktans (Xc): Xc = 1 / (2 * π * f * C)\n`;
+    resultOutput += `•  Strøm gennem R (Ir): Ir = U / R\n`;
+    resultOutput += `•  Strøm gennem L (Il): Il = U / Xl\n`;
+    resultOutput += `•  Strøm gennem C (Ic): Ic = U / Xc\n`;
+    resultOutput += `•  Total strøm (I): I = sqrt(Ir^2 + (Il - Ic)^2)\n`;
+    resultOutput += `•  Total impedans (Z): Z = U / I\n`;
+    resultOutput += `•  Nytteeffekt (P): P = U * Ir\n`;
+    resultOutput += `•  Tilsyneladende effekt (S): S = U * I\n`;
+    resultOutput += `•  Reaktiv effekt (Q): Q = U * |Il - Ic|\n`;
+    resultOutput += `•  Effektfaktor (cos φ): cos(φ) = P / S\n`;
+    resultOutput += `•  Faseforskydningsvinkel (φ): φ = arctan((Il-Ic) / Ir)\n\n`;
 
     resultOutput += `**Indtastede værdier:**\n`;
     resultOutput += `Spænding (U): ${formatValue(voltage, 'V')}\n`;
     resultOutput += `Modstand (R): ${formatValue(resistance, 'Ohm')}\n`;
-    resultOutput += `Kapacitans (C): ${isCReactance ? `${formatValue(capacitance, 'Ohm')} (Xc)` : formatValue(capacitance, 'F')}\n`;
-    resultOutput += `Induktans (L): ${isLReactance ? `${formatValue(inductance, 'Ohm')} (Xl)` : formatValue(inductance, 'H')}\n`;
-    resultOutput += `Impedans (Z): ${isImpedance ? `${formatValue(impedance, 'Ohm')} (Givet)` : 'Beregnet'}\n`;
-    resultOutput += `Frekvens (f): ${formatValue(frequency, 'Hz')}\n\n`;
-
-    resultOutput += `**Beregnet reaktans og delstrømme:**\n`;
-    resultOutput += `•  Kapacitiv reaktans (Xc): ${formatValue(xC, 'Ohm')}\n`;
-    resultOutput += `•  Induktiv reaktans (Xl): ${formatValue(xL, 'Ohm')}\n`;
-    resultOutput += `•  Strøm gennem R (Ir): ${formatValue(iR, 'A')}\n`;
-    resultOutput += `•  Strøm gennem L (Il): ${formatValue(iL, 'A')}\n`;
-    resultOutput += `•  Strøm gennem C (Ic): ${formatValue(iC, 'A')}\n\n`;
-    
-    resultOutput += `**Endelige resultater:**\n`;
-    resultOutput += `•  Total impedans (Z): ${formatValue(totalImpedance, 'Ohm')}\n`;
-    resultOutput += `•  Total strøm (I): ${formatValue(totalCurrent, 'A')}\n`;
-    resultOutput += `•  Faseforskydningsvinkel (φ): ${phaseAngleDeg.toFixed(3)} °\n`;
-    resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
-    resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
-    resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
-    resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
-    
-    document.getElementById('result').textContent = resultOutput;
-}
-
-// Vent, indtil DOM'en er fuldt indlæst, før du tilføjer event listeners
-document.addEventListener('DOMContentLoaded', () => {
-    const calculateButton = document.getElementById('calculate-button');
-    const resetButton = document.getElementById('reset-button');
-    
-    if (calculateButton) {
-        calculateButton.addEventListener('click', updateCalculator);
-    }
-    
-    if (resetButton) {
-        resetButton.addEventListener('click', resetCalculator);
-    }
-});
+Output:
+... (rest of the code) ...
