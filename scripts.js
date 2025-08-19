@@ -1,6 +1,6 @@
 /**
  * @file scripts.js
- * @author  Gemini (via Google) and MGS
+ * @author  Gemini (via Google) and User
  * @license MIT
  * @description A JavaScript file for calculating series and parallel RLC circuits.
  * The core code was developed collaboratively with Gemini, a large language model from Google.
@@ -8,7 +8,7 @@
 
 // Funktion til at parse en værdi med enhed (k, M, m, u, n, p, l for XL, c for XC, z for Z)
 function parseValue(input) {
-    if (!input) {
+    if (input === null || input === undefined || input === '') {
         return { value: 0, isLReactance: false, isCReactance: false, isImpedance: false };
     }
     
@@ -16,7 +16,10 @@ function parseValue(input) {
     
     const isLReactance = rawValue.endsWith('l');
     const isCReactance = rawValue.endsWith('c');
-    const isImpedance = rawValue.endsWith('z') || (rawValue.match(/^-?\d+(\.\d+)?$/) && document.getElementById('impedance').value.trim() === input.trim());
+    
+    // Check for impedans-enhed 'z' eller et rent tal i impedans-feltet
+    const isImpedance = rawValue.endsWith('z') || 
+                        (document.activeElement.id === 'impedance' && !isNaN(parseFloat(rawValue)) && !isNaN(rawValue.trim()));
 
     // Fjern enhedsbogstavet, hvis det er en reaktans-enhed
     const valueString = isLReactance || isCReactance || isImpedance ? rawValue.slice(0, -1) : rawValue;
@@ -29,7 +32,7 @@ function parseValue(input) {
     let parsedValue = value;
     
     // Håndter SI-præfikser
-    let unit = rawValue.replace(value.toString(), '').trim();
+    let unit = rawValue.replace(String(value), '').trim();
     if (unit.length > 0) {
         unit = unit.charAt(0);
     }
@@ -59,6 +62,10 @@ function parseValue(input) {
 
 // Opdateret funktion til at formatere et tal med enheder (H, F, Ω, osv.)
 function formatValue(value, unitType) {
+    if (value === null || isNaN(value)) {
+        return 'N/A';
+    }
+
     let unit = '';
     let suffix = '';
 
@@ -142,17 +149,18 @@ function getValues() {
         frequency,
         isLReactance: inductanceResult.isLReactance,
         isCReactance: capacitanceResult.isCReactance,
-        isImpedance: impedanceResult.isImpedance
+        isImpedance: impedanceResult.isImpedance || impedanceResult.value > 0
     };
 }
 
 // Opdaterer lommeregneren baseret på de indtastede værdier
 function updateCalculator() {
-    const { voltage, frequency, resistance, capacitance, inductance, impedance, isImpedance } = getValues();
+    const { voltage, frequency, resistance, capacitance, inductance, impedance } = getValues();
     const resultBox = document.getElementById('result');
     
     // Check for gyldige input. Mindst én af R, L, C, Z skal være til stede.
-    if (voltage <= 0 || frequency <= 0 || (resistance <= 0 && capacitance <= 0 && inductance <= 0 && impedance <= 0)) {
+    const hasValues = voltage > 0 && frequency > 0 && (resistance > 0 || capacitance > 0 || inductance > 0 || impedance > 0);
+    if (!hasValues) {
         resultBox.textContent = "Indtast venligst spænding, frekvens, og mindst én af R, L, C, eller Z.";
         return;
     }
@@ -261,41 +269,27 @@ function calculateParallelRLC() {
     let totalCurrent = 0;
 
     // Første trin: Håndter input
-    if (isCReactance) {
-        xC = capacitance;
-        C = 1 / (2 * Math.PI * frequency * xC);
-    } else if (capacitance > 0) {
-        C = capacitance;
-        xC = 1 / (2 * Math.PI * frequency * C);
-    }
-
-    if (isLReactance) {
-        xL = inductance;
-        L = xL / (2 * Math.PI * frequency);
-    } else if (inductance > 0) {
-        L = inductance;
-        xL = 2 * Math.PI * frequency * L;
-    }
-
+    xC = isCReactance ? capacitance : (capacitance > 0 ? 1 / (2 * Math.PI * frequency * capacitance) : 0);
+    xL = isLReactance ? inductance : (inductance > 0 ? 2 * Math.PI * frequency * inductance : 0);
+    
     const iR = (voltage > 0 && resistance > 0) ? voltage / resistance : 0;
     const iC = (voltage > 0 && xC > 0) ? voltage / xC : 0;
-    const iL = (voltage > 0 && xL > 0) ? voltage / xL : 0;
+    let iL = (voltage > 0 && xL > 0) ? voltage / xL : 0;
 
     // Andet trin: Beregn ud fra impedans, hvis den er givet
     if (isImpedance && impedance > 0) {
         totalImpedance = impedance;
         totalCurrent = voltage / totalImpedance;
         
-        // Find den reaktive strøm (som er IL, da vi antager en ideel spole)
+        // Find den reaktive strøm (som er I_L i dette tilfælde)
         const iReactiveSquared = Math.pow(totalCurrent, 2) - Math.pow(iR, 2);
-        const iReactive = Math.sqrt(Math.abs(iReactiveSquared));
+        const iReactive = Math.sqrt(Math.max(0, iReactiveSquared));
         
         iL = iReactive; 
         if (iL > 0) {
             xL = voltage / iL;
             L = xL / (2 * Math.PI * frequency);
         }
-
     } else {
         totalCurrent = Math.sqrt(Math.pow(iR, 2) + Math.pow(iL - iC, 2));
         totalImpedance = (totalCurrent > 0) ? voltage / totalCurrent : 0;
@@ -325,30 +319,14 @@ function calculateParallelRLC() {
     resultOutput += `Impedans (Z): ${isImpedance ? `${formatValue(impedance, 'Ohm')} (Givet)` : 'Beregnet'}\n`;
     resultOutput += `Frekvens (f): ${formatValue(frequency, 'Hz')}\n\n`;
 
-    resultOutput += `**Formler brugt i rækkefølge:**\n\n`;
-    resultOutput += `1. **Beregning af strømme:** Først finder vi strømmen gennem modstanden, da den er i fase med spændingen.\n`;
-    resultOutput += `   •  Strøm gennem R: Ir = U / R\n\n`;
-    if (isImpedance) {
-        resultOutput += `2. **Beregning af total strøm og reaktans:** Da den totale impedans (Z) er givet, finder vi den totale strøm. Derefter bruger vi den totale strøm og strømmen gennem R til at finde den reaktive strøm (som er lig med strømmen gennem L, da vi antager en ideel spole).\n`;
-        resultOutput += `   •  Total strøm: I(total) = U / Z\n`;
-        resultOutput += `   •  Reaktiv strøm: I(reaktiv) = √(I(total)² - Ir²)\n`;
-        resultOutput += `   •  Induktiv reaktans: Xl = U / I(reaktiv)\n\n`;
-    } else {
-        resultOutput += `2. **Beregning af total strøm og impedans:** Når de enkelte grenstrømme er kendte, kan vi finde den totale strøm ved at bruge Pythagoras' læresætning på strømmene. Derefter bruges Ohms lov til at finde den totale impedans.\n`;
-        resultOutput += `   •  Total strøm: I(total) = √(Ir² + (Ic - Il)²)\n`;
-        resultOutput += `   •  Total impedans: Z = U / I(total)\n\n`;
-    }
-    resultOutput += `3. **Beregning af fasevinkel:** Faseforskydningen mellem total strøm og spænding viser, om kredsløbet er induktivt eller kapacitivt.\n`;
-    resultOutput += `   •  φ = arctan((Ic - Il) / Ir)\n\n`;
-
-    resultOutput += `Beregnet reaktans og delstrømme:\n`;
+    resultOutput += `**Beregnet reaktans og delstrømme:**\n`;
     resultOutput += `•  Kapacitiv reaktans (Xc): ${formatValue(xC, 'Ohm')}\n`;
     resultOutput += `•  Induktiv reaktans (Xl): ${formatValue(xL, 'Ohm')}\n`;
     resultOutput += `•  Strøm gennem R (Ir): ${formatValue(iR, 'A')}\n`;
     resultOutput += `•  Strøm gennem L (Il): ${formatValue(iL, 'A')}\n`;
     resultOutput += `•  Strøm gennem C (Ic): ${formatValue(iC, 'A')}\n\n`;
     
-    resultOutput += `Endelige resultater:\n`;
+    resultOutput += `**Endelige resultater:**\n`;
     resultOutput += `•  Total impedans (Z): ${formatValue(totalImpedance, 'Ohm')}\n`;
     resultOutput += `•  Total strøm (I): ${formatValue(totalCurrent, 'A')}\n`;
     resultOutput += `•  Faseforskydningsvinkel (φ): ${phaseAngleDeg.toFixed(3)} °\n`;
@@ -358,13 +336,13 @@ function calculateParallelRLC() {
     resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
     
     // Yderligere beregninger, hvis reaktansen eller impedansen er givet
-    if (isCReactance) {
+    if (isCReactance && capacitance > 0) {
         resultOutput += `•  **Beregnet Kapacitans (C):** ${formatValue(C, 'F')}\n`;
     }
-    if (isLReactance) {
+    if (isLReactance && inductance > 0) {
         resultOutput += `•  **Beregnet Induktans (L):** ${formatValue(L, 'H')}\n`;
     }
-    if (isImpedance && impedance > 0 && xL > 0) {
+    if (isImpedance && impedance > 0 && L > 0) {
         resultOutput += `•  **Beregnet Induktans (L):** ${formatValue(L, 'H')}\n`;
     }
     
