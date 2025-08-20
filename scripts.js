@@ -118,21 +118,31 @@ function getValues() {
     };
 }
 
+// Funktion til at vise resultater og køre MathJax
+function displayResults(htmlContent) {
+    const resultBox = document.getElementById('result');
+    resultBox.innerHTML = htmlContent;
+    
+    // Kør MathJax efter, at DOM'en er opdateret
+    MathJax.typesetPromise().then(() => {
+        console.log("MathJax typeset completed.");
+    }).catch((err) => console.error("MathJax typesetting failed: ", err));
+}
+
 // Hovedfunktion, der opdaterer lommeregneren baseret på kredsløbstype
 function updateCalculator() {
     const { voltage, current, frequency, resistance, capacitance, inductance, impedance } = getValues();
-    const resultBox = document.getElementById('result');
     
     // Fejlhåndtering for grundlæggende input
     const knownValuesCount = [voltage, current, resistance, capacitance, inductance, impedance].filter(v => v > 0).length;
     if (frequency <= 0 || knownValuesCount < 2) {
-        resultBox.innerHTML = `<p><strong>Fejl:</strong> Indtast venligst frekvens, og mindst to andre værdier.</p>`;
+        displayResults(`<p><strong>Fejl:</strong> Indtast venligst frekvens, og mindst to andre værdier.</p>`);
         return;
     }
     
     // Tjek at enten spænding eller strøm er indtastet, men ikke begge (medmindre der også er impedans)
     if ((voltage > 0 && current > 0) && impedance === 0) {
-        resultBox.innerHTML = `<p><strong>Fejl:</strong> Indtast venligst enten spænding (U) eller strøm (I), men ikke begge, medmindre du også indtaster impedans (Z).</p>`;
+        displayResults(`<p><strong>Fejl:</strong> Indtast venligst enten spænding (U) eller strøm (I), men ikke begge, medmindre du også indtaster impedans (Z).</p>`);
         return;
     }
 
@@ -151,7 +161,7 @@ function resetCalculator() {
     inputs.forEach(id => {
         document.getElementById(id).value = '';
     });
-    document.getElementById('result').innerHTML = '<p>Dine resultater vil vises her...</p>';
+    displayResults('<p>Dine resultater vil vises her...</p>');
 }
 
 // Generel beregning for seriekredsløb
@@ -213,11 +223,7 @@ function calculateSeriesRLC() {
             </ul>
         </div>
     `;
-    document.getElementById('result').innerHTML = resultOutput;
-    // Render the MathJax equations
-    MathJax.typesetPromise().then(() => {
-        console.log("MathJax typeset completed.");
-    }).catch((err) => console.error("MathJax typesetting failed: ", err));
+    displayResults(resultOutput);
 }
 
 // Generel beregning for parallelkredsløb
@@ -311,11 +317,7 @@ function calculateParallelRLC() {
             </ul>
         </div>
     `;
-    document.getElementById('result').innerHTML = resultOutput;
-    // Render the MathJax equations
-    MathJax.typesetPromise().then(() => {
-        console.log("MathJax typeset completed.");
-    }).catch((err) => console.error("MathJax typesetting failed: ", err));
+    displayResults(resultOutput);
 }
 
 // Vent, indtil DOM'en er fuldt indlæst, før du tilføjer event listeners
