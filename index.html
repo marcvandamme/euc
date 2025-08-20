@@ -150,15 +150,16 @@
         }
     </style>
     
-    <!-- Explicit MathJax configuration -->
-    <script type="text/x-mathjax-config">
-        MathJax.Hub.Config({
-            tex2jax: {
-                inlineMath: [['$','$'], ["\\(","\\)"]],
-                displayMath: [['$$','$$'], ["\\[","\\]"]],
-                processEscapes: true
+    <!-- MathJax v3 Konfiguration -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            },
+            svg: {
+                fontCache: 'global'
             }
-        });
+        };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
@@ -355,14 +356,14 @@
             };
         }
 
-        // Funktion til at vise resultater og køre MathJax
+        // Funktion til at vise resultater og køre MathJax v3
         function displayResults(htmlContent) {
             const resultBox = document.getElementById('result');
             resultBox.innerHTML = htmlContent;
             
             // Kør MathJax efter, at DOM'en er opdateret
             if (window.MathJax) {
-                MathJax.Hub.Queue(["Typeset", MathJax.Hub, resultBox]);
+                MathJax.typesetPromise([resultBox]).catch((err) => console.error("MathJax typesetting failed: ", err));
             }
         }
 
