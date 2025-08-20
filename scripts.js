@@ -195,6 +195,9 @@ function calculateSeriesRLC() {
             <ul class="result-list">
                 <li><strong>Kapacitiv reaktans:</strong> $X_C = \\frac{1}{2\\pi f C} = ${formatValue(xC, 'Ohm')}$</li>
                 <li><strong>Induktiv reaktans:</strong> $X_L = 2\\pi f L = ${formatValue(xL, 'Ohm')}$</li>
+                <li><strong>Spænding over R:</strong> $U_R = I \\cdot R = ${formatValue(uR, 'V')}$</li>
+                <li><strong>Spænding over L:</strong> $U_L = I \\cdot X_L = ${formatValue(uL, 'V')}$</li>
+                <li><strong>Spænding over C:</strong> $U_C = I \\cdot X_C = ${formatValue(uC, 'V')}$</li>
             </ul>
 
             <h4>Endelige resultater:</h4>
