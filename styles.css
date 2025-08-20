@@ -1,18 +1,18 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #eef2f7;
-    color: #333;
+    background-color: #121212;
+    color: #e0e0e0;
     margin: 0;
     padding: 0;
     line-height: 1.6;
 }
 
 header {
-    background-color: #0056b3;
-    color: #fff;
+    background-color: #1f1f1f;
+    color: #ffffff;
     text-align: center;
     padding: 2rem 0;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .container {
@@ -26,16 +26,16 @@ header {
 }
 
 .calculator-card, .result-card {
-    background-color: #fff;
+    background-color: #1f1f1f;
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     padding: 25px;
     flex: 1;
     min-width: 300px;
 }
 
 h1, h2, h3 {
-    color: #0056b3;
+    color: #4a90e2;
     margin-top: 0;
 }
 
@@ -53,9 +53,11 @@ h1, h2, h3 {
 .input-group select {
     width: 100%;
     padding: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid #4a4a4a;
+    background-color: #2b2b2b;
+    color: #e0e0e0;
     border-radius: 5px;
-    box-sizing: border-box; /* Ensures padding doesn't affect total width */
+    box-sizing: border-box;
     font-size: 1em;
 }
 
@@ -66,7 +68,7 @@ h1, h2, h3 {
 }
 
 button {
-    background-color: #007BFF;
+    background-color: #4a90e2;
     color: white;
     padding: 12px 20px;
     border: none;
@@ -77,13 +79,12 @@ button {
 }
 
 button:hover {
-    background-color: #0056b3;
+    background-color: #357bd8;
 }
 
-/* Stil for resultatvinduet */
 .result-box {
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
+    background-color: #2b2b2b;
+    border: 1px solid #4a4a4a;
     border-radius: 8px;
     padding: 20px;
     margin-top: 20px;
@@ -95,12 +96,12 @@ button:hover {
 }
 
 .result-box h2, .result-box h3 {
-    border-bottom: 2px solid #007BFF;
+    border-bottom: 2px solid #4a90e2;
     padding-bottom: 5px;
     margin-top: 0;
     font-size: 1.4em;
     font-weight: bold;
-    color: #333;
+    color: #e0e0e0;
 }
 
 .result-box p {
@@ -120,19 +121,19 @@ button:hover {
 footer {
     text-align: center;
     padding: 20px;
-    background-color: #0056b3;
-    color: #fff;
+    background-color: #1f1f1f;
+    color: #ffffff;
     margin-top: 30px;
 }
 
 footer button {
-    background-color: #fff;
-    color: #007BFF;
+    background-color: #e0e0e0;
+    color: #4a90e2;
     margin-top: 10px;
 }
 
 footer button:hover {
-    background-color: #eef2f7;
+    background-color: #cccccc;
 }
 
 @media (max-width: 768px) {
