@@ -536,8 +536,12 @@
                 current = voltage / impedance;
                 
                 // Beregn reaktiv strøm (IL) for et RL kredsløb
-                const iReactive = Math.sqrt(Math.pow(current, 2) - Math.pow(resistiveCurrent, 2));
-                const iL = iReactive;
+                const iReactiveSquared = Math.pow(current, 2) - Math.pow(resistiveCurrent, 2);
+                if (iReactiveSquared < 0) {
+                     displayResults(`<p><strong>Fejl:</strong> Værdierne er ikke gyldige for et kredsløb. $I^2$ er mindre end $I_R^2$.</p>`);
+                     return;
+                }
+                const iL = Math.sqrt(iReactiveSquared);
                 const iC = 0; // Ingen kapacitans
                 
                 // Beregn Induktiv reaktans (XL)
@@ -546,18 +550,17 @@
                 // Beregn Induktans (L)
                 inductance = xL / (2 * Math.PI * frequency);
 
-                // Beregn endelig impedans til sammenligning
-                const conductance = 1 / resistance;
-                const inductiveSusceptance = 1 / xL;
-                const totalAdmittance = Math.sqrt(Math.pow(conductance, 2) + Math.pow(inductiveSusceptance, 2));
-                impedance = 1 / totalAdmittance;
+                const realPower = voltage * resistiveCurrent;
+                const apparentPower = voltage * current;
+                const reactivePower = Math.abs(voltage * iL);
+                const powerFactor = apparentPower > 0 ? realPower / apparentPower : 0;
 
-                 const realPower = voltage * resistiveCurrent;
-                 const apparentPower = voltage * current;
-                 const reactivePower = Math.abs(voltage * iL);
-                 const powerFactor = apparentPower > 0 ? realPower / apparentPower : 0;
-
-                 const phaseAngleDeg = Math.atan(iL / resistiveCurrent) * (180 / Math.PI);
+                let phaseAngleDeg = 0;
+                if (resistiveCurrent !== 0) {
+                     phaseAngleDeg = Math.atan(iL / resistiveCurrent) * (180 / Math.PI);
+                } else if (iL > 0) {
+                     phaseAngleDeg = 90;
+                }
             
                 let resultOutput = `
                     <div class="result-box">
@@ -569,12 +572,14 @@
                             <li><strong>Total strøm:</strong> $I = \\frac{U}{Z} = ${formatValue(current, 'A')}$</li>
                             <li><strong>Strøm gennem L:</strong> $I_L = \\sqrt{I^2 - I_R^2} = ${formatValue(iL, 'A')}$</li>
                             <li><strong>Induktiv reaktans:</strong> $X_L = \\frac{U}{I_L} = ${formatValue(xL, 'Ohm')}$</li>
+                            <li><strong>Kapacitiv strøm:</strong> $I_C = ${formatValue(iC, 'A')}$</li>
+                            <li><strong>Kapacitiv reaktans:</strong> $X_C = N/A$</li>
                         </ul>
 
                         <h4>Endelige resultater:</h4>
                         <ul class="result-list">
                             <li><strong>Induktans:</strong> $L = \\frac{X_L}{2\\pi f} = ${formatValue(inductance, 'H')}$</li>
-                            <li><strong>Total impedans:</strong> $Z = ${formatValue(impedance, 'Ohm')}$</li>
+                            <li><strong>Total impedans:</strong> $Z = \\frac{U}{I} = ${formatValue(impedance, 'Ohm')}$</li>
                             <li><strong>Faseforskydningsvinkel:</strong> $\\phi = \\arctan(\\frac{I_L}{I_R}) = ${phaseAngleDeg.toFixed(3)} °$</li>
                             <li><strong>Effektfaktor:</strong> $\\cos(\\phi) = \\frac{I_R}{I} = ${powerFactor.toFixed(3)}$</li>
                             <li><strong>Nytteeffekt:</strong> $P = U \\cdot I_R = ${formatValue(realPower, 'W')}$</li>
