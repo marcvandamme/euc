@@ -42,6 +42,7 @@ function parseValue(input) {
             parsedValue *= 1e-3;
             break;
         case 'u': // Mikro (u)
+        case 'μ': // Mikro (μ)
             parsedValue *= 1e-6;
             break;
         case 'n': // Nano
@@ -111,7 +112,7 @@ function formatValue(value, unitType) {
 function getValues() {
     return {
         voltage: parseValue(document.getElementById('voltage').value).value,
-        current: parseValue(document.getElementById('current').value).value, // Ny linje
+        current: parseValue(document.getElementById('current').value).value,
         frequency: parseValue(document.getElementById('frequency').value).value,
         resistance: parseValue(document.getElementById('resistance').value).value,
         capacitance: parseValue(document.getElementById('capacitance').value).value,
@@ -214,8 +215,7 @@ function calculateSeriesRLC() {
         resultOutput += `•  Total strøm (I): I = U / Z\n`;
     } else {
         resultOutput += `•  Total spænding (U): U = I * Z\n`;
-    }
-    resultOutput += `•  Spændingsfald over R (Ur): Ur = I * R\n`;
+    Output += `•  Spændingsfald over R (Ur): Ur = I * R\n`;
     resultOutput += `•  Spændingsfald over L (Ul): Ul = I * Xl\n`;
     resultOutput += `•  Spændingsfald over C (Uc): Uc = I * Xc\n`;
     resultOutput += `•  Nytteeffekt (P): P = I^2 * R\n`;
@@ -364,7 +364,7 @@ function calculateParallelRLC() {
     resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
     resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
     resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
-    resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
+sultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
     
     document.getElementById('result').textContent = resultOutput;
 }
