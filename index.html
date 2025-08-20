@@ -3,70 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RLC-Kredsløb Lommeregner</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>RLC Lommeregner</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="calculator-container">
-        <h1>RLC-Kredsløb Lommeregner</h1>
-        
-        <div class="controls">
-            <label for="circuit-select">Vælg kredsløbstype:</label>
-            <select id="circuit-select">
-                <option value="series">Serie</option>
-                <option value="parallel">Parallel</option>
-            </select>
-        </div>
+    <header>
+        <h1>RLC Lommeregner</h1>
+    </header>
 
-        <div class="input-section">
+    <main class="container">
+        <section class="calculator-card">
+            <h2>Indtast værdier</h2>
+
+            <div class="input-group">
+                <label for="circuit-select">Kredsløbstype:</label>
+                <select id="circuit-select">
+                    <option value="series">Serieforbundet RLC</option>
+                    <option value="parallel">Parallelforbundet RLC</option>
+                </select>
+            </div>
+            
             <div class="input-group">
                 <label for="voltage">Spænding (U):</label>
-                <input type="text" id="voltage" placeholder="V">
+                <input type="text" id="voltage" placeholder="fx 230 V">
             </div>
+
             <div class="input-group">
-    <label for="current">Strøm (I):</label>
-    <input type="text" id="current" placeholder="Indtast strøm i A, mA osv.">
-</div>
-            <div class="input-group">
-                <label for="frequency">Frekvens (f):</label>
-                <input type="text" id="frequency" placeholder="Hz">
+                <label for="current">Strøm (I):</label>
+                <input type="text" id="current" placeholder="fx 3.5 A">
             </div>
+
             <div class="input-group">
                 <label for="resistance">Modstand (R):</label>
-                <input type="text" id="resistance" placeholder="Ω">
+                <input type="text" id="resistance" placeholder="fx 600 Ω">
             </div>
+
             <div class="input-group">
                 <label for="capacitance">Kapacitans (C):</label>
-                <input type="text" id="capacitance" placeholder="F eller Ωc Benyt .">
+                <input type="text" id="capacitance" placeholder="fx 300 μF">
             </div>
+
             <div class="input-group">
                 <label for="inductance">Induktans (L):</label>
-                <input type="text" id="inductance" placeholder="H eller Ωl">
+                <input type="text" id="inductance" placeholder="fx 120 mH">
             </div>
+            
+            <div class="input-group">
+                <label for="frequency">Frekvens (f):</label>
+                <input type="text" id="frequency" placeholder="fx 60 Hz">
+            </div>
+            
             <div class="input-group">
                 <label for="impedance">Impedans (Z):</label>
-                <input type="text" id="impedance" placeholder="Ω eller Ωz Benyt .">
+                <input type="text" id="impedance" placeholder="fx 50 Ω">
             </div>
-            <div class="input-group">
-                <label for="power">Nytteeffekt (P):</label>
-                <input type="text" id="power" placeholder="W">
+            
+            <div class="button-group">
+                <button id="calculate-button">Beregn</button>
+                <button id="reset-button">Nulstil</button>
             </div>
-        </div>
+        </section>
 
-        <div class="button-group">
-            <button id="calculate-button">Beregn</button>
-            <button id="reset-button">Nulstil</button>
-        </div>
+        <section class="result-card">
+            <h2>Resultater</h2>
+            <div class="result-box" id="result">
+                <p>Dine resultater vil vises her...</p>
+            </div>
+        </section>
+    </main>
 
-        <div class="result-section">
-            <h3>Resultater:</h3>
-            <pre id="result">Dine resultater vil vises her...</pre>
-        </div>
-    </div>
-    
+    <footer>
+        <p>&copy; 2025 RLC Lommeregner | Lavet med hjælp fra Gemini</p>
+        <button id="feedback-button">Giv feedback</button>
+    </footer>
+
     <script src="scripts.js"></script>
 </body>
 </html>
-
-
