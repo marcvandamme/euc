@@ -193,27 +193,28 @@ function calculateSeriesRLC() {
             
             <h4>Beregnet reaktans og spændingsfald:</h4>
             <ul class="result-list">
-                <li><strong>Kapacitiv reaktans (Xc):</strong> ${formatValue(xC, 'Ohm')}</li>
-                <li><strong>Induktiv reaktans (Xl):</strong> ${formatValue(xL, 'Ohm')}</li>
-                <li><strong>Spændingsfald over R (Ur):</strong> ${formatValue(uR, 'V')}</li>
-                <li><strong>Spændingsfald over L (Ul):</strong> ${formatValue(uL, 'V')}</li>
-                <li><strong>Spændingsfald over C (Uc):</strong> ${formatValue(uC, 'V')}</li>
+                <li><strong>Kapacitiv reaktans:</strong> $X_C = \\frac{1}{2\\pi f C} = ${formatValue(xC, 'Ohm')}$</li>
+                <li><strong>Induktiv reaktans:</strong> $X_L = 2\\pi f L = ${formatValue(xL, 'Ohm')}$</li>
             </ul>
 
             <h4>Endelige resultater:</h4>
             <ul class="result-list">
-                <li><strong>Total impedans (Z):</strong> ${formatValue(totalImpedance, 'Ohm')}</li>
-                <li><strong>Total strøm (I):</strong> ${formatValue(calculatedCurrent, 'A')}</li>
-                <li><strong>Total spænding (U):</strong> ${formatValue(calculatedVoltage, 'V')}</li>
-                <li><strong>Faseforskydningsvinkel (&phi;):</strong> ${phaseAngleDeg.toFixed(3)} °</li>
-                <li><strong>Effektfaktor (cos &phi;):</strong> ${powerFactor.toFixed(3)}</li>
-                <li><strong>Nytteeffekt (P):</strong> ${formatValue(realPower, 'W')}</li>
-                <li><strong>Tilsyneladende effekt (S):</strong> ${formatValue(apparentPower, 'VA')}</li>
-                <li><strong>Reaktiv effekt (Q):</strong> ${formatValue(reactivePower, 'var')}</li>
+                <li><strong>Total impedans:</strong> $Z = \\sqrt{R^2 + (X_L - X_C)^2} = ${formatValue(totalImpedance, 'Ohm')}$</li>
+                <li><strong>Total strøm:</strong> $I = \\frac{U}{Z} = ${formatValue(calculatedCurrent, 'A')}$</li>
+                <li><strong>Total spænding:</strong> $U = I \\cdot Z = ${formatValue(calculatedVoltage, 'V')}$</li>
+                <li><strong>Faseforskydningsvinkel:</strong> $\\phi = \\arccos(\\frac{R}{Z}) = ${phaseAngleDeg.toFixed(3)} °$</li>
+                <li><strong>Effektfaktor:</strong> $\\cos(\\phi) = \\frac{R}{Z} = ${powerFactor.toFixed(3)}$</li>
+                <li><strong>Nytteeffekt:</strong> $P = U \\cdot I \\cdot \\cos(\\phi) = ${formatValue(realPower, 'W')}$</li>
+                <li><strong>Tilsyneladende effekt:</strong> $S = U \\cdot I = ${formatValue(apparentPower, 'VA')}$</li>
+                <li><strong>Reaktiv effekt:</strong> $Q = U \\cdot I \\cdot \\sin(\\phi) = ${formatValue(reactivePower, 'var')}$</li>
             </ul>
         </div>
     `;
     document.getElementById('result').innerHTML = resultOutput;
+    // Render the MathJax equations
+    MathJax.typesetPromise().then(() => {
+        console.log("MathJax typeset completed.");
+    }).catch((err) => console.error("MathJax typesetting failed: ", err));
 }
 
 // Generel beregning for parallelkredsløb
@@ -229,7 +230,7 @@ function calculateParallelRLC() {
     if (capacitance > 0) {
         xC = isCReactance ? capacitance : (1 / (2 * Math.PI * frequency * capacitance));
     }
-
+    
     if (givenVoltage) {
         calculatedVoltage = voltage;
         if (resistance > 0) iR = calculatedVoltage / resistance;
@@ -287,27 +288,31 @@ function calculateParallelRLC() {
             
             <h4>Beregnet reaktans og delstrømme:</h4>
             <ul class="result-list">
-                <li><strong>Kapacitiv reaktans (Xc):</strong> ${formatValue(xC, 'Ohm')}</li>
-                <li><strong>Induktiv reaktans (Xl):</strong> ${formatValue(xL, 'Ohm')}</li>
-                <li><strong>Strøm gennem R (Ir):</strong> ${formatValue(iR, 'A')}</li>
-                <li><strong>Strøm gennem L (Il):</strong> ${formatValue(iL, 'A')}</li>
-                <li><strong>Strøm gennem C (Ic):</strong> ${formatValue(iC, 'A')}</li>
+                <li><strong>Kapacitiv reaktans:</strong> $X_C = \\frac{1}{2\\pi f C} = ${formatValue(xC, 'Ohm')}$</li>
+                <li><strong>Induktiv reaktans:</strong> $X_L = 2\\pi f L = ${formatValue(xL, 'Ohm')}$</li>
+                <li><strong>Strøm gennem R:</strong> $I_R = \\frac{U}{R} = ${formatValue(iR, 'A')}$</li>
+                <li><strong>Strøm gennem L:</strong> $I_L = \\frac{U}{X_L} = ${formatValue(iL, 'A')}$</li>
+                <li><strong>Strøm gennem C:</strong> $I_C = \\frac{U}{X_C} = ${formatValue(iC, 'A')}$</li>
             </ul>
 
             <h4>Endelige resultater:</h4>
             <ul class="result-list">
-                <li><strong>Total impedans (Z):</strong> ${formatValue(totalImpedance, 'Ohm')}</li>
-                <li><strong>Total strøm (I):</strong> ${formatValue(calculatedCurrent, 'A')}</li>
-                <li><strong>Total spænding (U):</strong> ${formatValue(calculatedVoltage, 'V')}</li>
-                <li><strong>Faseforskydningsvinkel (&phi;):</strong> ${phaseAngleDeg.toFixed(3)} °</li>
-                <li><strong>Effektfaktor (cos &phi;):</strong> ${powerFactor.toFixed(3)}</li>
-                <li><strong>Nytteeffekt (P):</strong> ${formatValue(realPower, 'W')}</li>
-                <li><strong>Tilsyneladende effekt (S):</strong> ${formatValue(apparentPower, 'VA')}</li>
-                <li><strong>Reaktiv effekt (Q):</strong> ${formatValue(reactivePower, 'var')}</li>
+                <li><strong>Total impedans:</strong> $Z = \\frac{1}{\\sqrt{(\\frac{1}{R})^2 + (\\frac{1}{X_C} - \\frac{1}{X_L})^2}} = ${formatValue(totalImpedance, 'Ohm')}$</li>
+                <li><strong>Total strøm:</strong> $I = \\sqrt{I_R^2 + (I_C - I_L)^2} = ${formatValue(calculatedCurrent, 'A')}$</li>
+                <li><strong>Total spænding:</strong> $U = I \\cdot Z = ${formatValue(calculatedVoltage, 'V')}$</li>
+                <li><strong>Faseforskydningsvinkel:</strong> $\\phi = \\arctan(\\frac{I_C - I_L}{I_R}) = ${phaseAngleDeg.toFixed(3)} °$</li>
+                <li><strong>Effektfaktor:</strong> $\\cos(\\phi) = \\frac{I_R}{I} = ${powerFactor.toFixed(3)}$</li>
+                <li><strong>Nytteeffekt:</strong> $P = U \\cdot I_R = ${formatValue(realPower, 'W')}$</li>
+                <li><strong>Tilsyneladende effekt:</strong> $S = U \\cdot I = ${formatValue(apparentPower, 'VA')}$</li>
+                <li><strong>Reaktiv effekt:</strong> $Q = U \\cdot (I_C - I_L) = ${formatValue(reactivePower, 'var')}$</li>
             </ul>
         </div>
     `;
     document.getElementById('result').innerHTML = resultOutput;
+    // Render the MathJax equations
+    MathJax.typesetPromise().then(() => {
+        console.log("MathJax typeset completed.");
+    }).catch((err) => console.error("MathJax typesetting failed: ", err));
 }
 
 // Vent, indtil DOM'en er fuldt indlæst, før du tilføjer event listeners
