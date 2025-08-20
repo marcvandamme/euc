@@ -1,115 +1,142 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #121212; /* Mørk baggrund */
-    color: #e0e0e0; /* Lys tekstfarve */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
+    background-color: #eef2f7;
+    color: #333;
     margin: 0;
+    padding: 0;
+    line-height: 1.6;
 }
 
-.calculator-container {
-    background-color: #1e1e1e; /* Mørkere containerbaggrund */
-    padding: 2rem;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-    width: 100%;
-    max-width: 450px;
+header {
+    background-color: #0056b3;
+    color: #fff;
     text-align: center;
+    padding: 2rem 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-h2 {
-    color: #ffffff; /* Hvid overskrift */
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: auto;
+}
+
+.calculator-card, .result-card {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 25px;
+    flex: 1;
+    min-width: 300px;
+}
+
+h1, h2, h3 {
+    color: #0056b3;
     margin-top: 0;
-    margin-bottom: 1.5rem;
-}
-
-.circuit-type {
-    margin-bottom: 1.5rem;
-}
-
-.circuit-type label {
-    font-weight: bold;
-    color: #bbbbbb;
-    margin-right: 10px;
-}
-
-.circuit-type select {
-    padding: 8px;
-    border-radius: 5px;
-    border: 1px solid #333;
-    background-color: #2b2b2b;
-    color: #e0e0e0;
-    font-size: 1rem;
 }
 
 .input-group {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    margin-bottom: 1rem;
+    margin-bottom: 15px;
 }
 
 .input-group label {
+    display: block;
+    margin-bottom: 5px;
     font-weight: bold;
-    color: #bbbbbb;
-    margin-bottom: 0.5rem;
 }
 
-.input-group input {
+.input-group input,
+.input-group select {
     width: 100%;
     padding: 10px;
-    border: 1px solid #333;
+    border: 1px solid #ccc;
     border-radius: 5px;
-    background-color: #2b2b2b;
-    color: #e0e0e0;
-    font-size: 1rem;
-    box-sizing: border-box;
+    box-sizing: border-box; /* Ensures padding doesn't affect total width */
+    font-size: 1em;
 }
 
 .button-group {
     display: flex;
-    justify-content: space-between; /* Fordeler knapperne jævnt */
-    margin-top: 1.5rem;
+    gap: 10px;
+    margin-top: 20px;
 }
 
-.button-group button {
-    padding: 12px 24px;
-    font-size: 1rem;
-    color: #fff;
+button {
+    background-color: #007BFF;
+    color: white;
+    padding: 12px 20px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    font-size: 1em;
     transition: background-color 0.3s ease;
-    flex: 1; /* Gør knapperne lige store */
-    margin: 0 5px; /* Skaber mellemrum mellem knapperne */
 }
 
-#calculate-button {
-    background-color: #007bff; /* Blå farve */
-}
-
-#calculate-button:hover {
+button:hover {
     background-color: #0056b3;
 }
 
-#reset-button {
-    background-color: #6c757d; /* Grå farve */
-}
-
-#reset-button:hover {
-    background-color: #5a6268;
-}
-
-#result {
-    background-color: #2b2b2b;
-    border: 1px solid #333;
-    border-radius: 5px;
-    padding: 1rem;
-    margin-top: 1.5rem;
-    text-align: left;
+/* Stil for resultatvinduet */
+.result-box {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+    font-family: 'Courier New', Courier, monospace;
     white-space: pre-wrap;
-    font-size: 0.9rem;
-    color: #e0e0e0;
+    overflow-x: auto;
+    font-size: 0.9em;
+    min-height: 300px;
+}
+
+.result-box h2, .result-box h3 {
+    border-bottom: 2px solid #007BFF;
+    padding-bottom: 5px;
+    margin-top: 0;
+    font-size: 1.4em;
+    font-weight: bold;
+    color: #333;
+}
+
+.result-box p {
+    margin: 5px 0;
+    line-height: 1.5;
+}
+
+.result-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.result-list li {
+    margin-bottom: 5px;
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #0056b3;
+    color: #fff;
+    margin-top: 30px;
+}
+
+footer button {
+    background-color: #fff;
+    color: #007BFF;
+    margin-top: 10px;
+}
+
+footer button:hover {
+    background-color: #eef2f7;
+}
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
 }
