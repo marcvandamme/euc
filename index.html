@@ -54,7 +54,11 @@
         }
 
         #theme-toggle:hover {
-            background-color: var(--accent-color);
+            background-color: #357bd8;
+        }
+        
+        body.light-mode #theme-toggle:hover {
+            background-color: #1159b3;
         }
 
         .container {
@@ -206,7 +210,6 @@
         }
     </style>
     
-    <!-- MathJax v3 Konfiguration -->
     <script>
         window.MathJax = {
             tex: {
@@ -244,8 +247,13 @@
             </div>
 
             <div class="input-group">
-                <label for="current">Strøm (I):</label>
+                <label for="current">Total Strøm (I):</label>
                 <input type="text" id="current" placeholder="fx 3.5 A">
+            </div>
+
+            <div class="input-group">
+                <label for="resistive-current">Virkestrøm (IR):</label>
+                <input type="text" id="resistive-current" placeholder="fx 3.2 A">
             </div>
 
             <div class="input-group">
@@ -406,6 +414,7 @@
             return {
                 voltage: parseValue(document.getElementById('voltage').value).value,
                 current: parseValue(document.getElementById('current').value).value,
+                resistiveCurrent: parseValue(document.getElementById('resistive-current').value).value,
                 frequency: parseValue(document.getElementById('frequency').value).value,
                 resistance: parseValue(document.getElementById('resistance').value).value,
                 capacitance: parseValue(document.getElementById('capacitance').value).value,
@@ -430,20 +439,34 @@
 
         // Hovedfunktion, der opdaterer lommeregneren baseret på kredsløbstype
         function updateCalculator() {
-            const { voltage, current, frequency, resistance, capacitance, inductance, impedance } = getValues();
+            const { voltage, current, resistiveCurrent, frequency, resistance, capacitance, inductance, impedance } = getValues();
             
-            // Fejlhåndtering for grundlæggende input
-            const knownValuesCount = [voltage, current, resistance, capacitance, inductance, impedance].filter(v => v > 0).length;
+            // Tjek antal af kendte værdier
+            const knownValuesCount = [voltage, current, resistiveCurrent, resistance, capacitance, inductance, impedance].filter(v => v > 0).length;
             if (frequency <= 0 || knownValuesCount < 2) {
-                displayResults(`<p><strong>Fejl:</strong> Indtast venligst frekvens, og mindst to andre værdier.</p>`);
+                displayResults(`<p><strong>Fejl:</strong> Indtast venligst frekvens, og mindst to andre værdier (spænding, strøm, modstand, osv.).</p>`);
                 return;
             }
             
-            // Tjek at enten spænding eller strøm er indtastet, men ikke begge (medmindre der også er impedans)
-            if ((voltage > 0 && current > 0) && impedance === 0) {
-                displayResults(`<p><strong>Fejl:</strong> Indtast venligst enten spænding (U) eller strøm (I), men ikke begge, medmindre du også indtaster impedans (Z).</p>`);
+            // Tjek for modstridende input
+            const hasVoltage = voltage > 0;
+            const hasCurrent = current > 0;
+            const hasResistiveCurrent = resistiveCurrent > 0;
+            const hasResistance = resistance > 0;
+            const hasImpedance = impedance > 0;
+
+            if (hasVoltage && hasCurrent && !hasImpedance) {
+                 displayResults(`<p><strong>Fejl:</strong> Indtast venligst enten spænding (U) eller total strøm (I), men ikke begge, medmindre du også indtaster impedans (Z).</p>`);
                 return;
             }
+            if (hasVoltage && hasResistance && hasResistiveCurrent) {
+                const calculatedIr = voltage / resistance;
+                if (Math.abs(calculatedIr - resistiveCurrent) / resistiveCurrent > 0.01) {
+                    displayResults(`<p><strong>Fejl:</strong> Indtastede værdier for Spænding (U), Virkestrøm (IR) og Modstand (R) er modstridende. Vælg venligst to af disse, og lad den tredje blive beregnet.</p>`);
+                    return;
+                }
+            }
+
 
             const selectedCircuitType = document.getElementById('circuit-select').value;
             
@@ -456,7 +479,7 @@
 
         // Nulstiller alle inputfelter og resultatvisningen
         function resetCalculator() {
-            const inputs = ['voltage', 'current', 'frequency', 'resistance', 'capacitance', 'inductance', 'impedance'];
+            const inputs = ['voltage', 'current', 'resistive-current', 'frequency', 'resistance', 'capacitance', 'inductance', 'impedance'];
             inputs.forEach(id => {
                 document.getElementById(id).value = '';
             });
@@ -465,7 +488,7 @@
 
         // Generel beregning for seriekredsløb
         function calculateSeriesRLC() {
-            const { voltage, current, resistance, capacitance, inductance, frequency, isLReactance, isCReactance, impedance, isImpedance } = getValues();
+            const { voltage, current, frequency, resistance, capacitance, inductance, impedance, isLReactance, isCReactance, isImpedance } = getValues();
             let totalImpedance, calculatedVoltage, calculatedCurrent, xL = 0, xC = 0;
             const givenVoltage = voltage > 0;
 
@@ -527,25 +550,36 @@
 
         // Generel beregning for parallelkredsløb
         function calculateParallelRLC() {
-            const { voltage, current, resistance, capacitance, inductance, frequency, isLReactance, isCReactance, impedance, isImpedance } = getValues();
+            const { voltage, current, resistiveCurrent, resistance, capacitance, inductance, frequency, isLReactance, isCReactance, impedance, isImpedance } = getValues();
             
             let totalImpedance, calculatedVoltage, calculatedCurrent, iR = 0, iL = 0, iC = 0, xL = 0, xC = 0;
-            const givenVoltage = voltage > 0;
-            
+            let givenVoltage = voltage > 0;
+            let givenResistiveCurrent = resistiveCurrent > 0;
+
             if (inductance > 0) {
                 xL = isLReactance ? inductance : (2 * Math.PI * frequency * inductance);
             }
             if (capacitance > 0) {
                 xC = isCReactance ? capacitance : (1 / (2 * Math.PI * frequency * capacitance));
             }
-            
+
+            // Prioriter input: Spænding > Virkestrøm > Total strøm
             if (givenVoltage) {
                 calculatedVoltage = voltage;
+            } else if (givenResistiveCurrent && resistance > 0) {
+                calculatedVoltage = resistiveCurrent * resistance;
+                givenVoltage = true; // Sæt flag for, at vi nu har en spænding
+            } else if (current > 0 && isImpedance) {
+                 calculatedVoltage = current * impedance;
+                 givenVoltage = true;
+            }
+            
+            if (givenVoltage) {
                 if (resistance > 0) iR = calculatedVoltage / resistance;
                 if (xL > 0) iL = calculatedVoltage / xL;
                 if (xC > 0) iC = calculatedVoltage / xC;
                 calculatedCurrent = Math.sqrt(Math.pow(iR, 2) + Math.pow(iL - iC, 2));
-            } else {
+            } else { // Beregn ud fra total strøm eller ukendte
                 calculatedCurrent = current;
                 if (isImpedance && impedance > 0) {
                     totalImpedance = impedance;
