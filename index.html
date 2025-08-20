@@ -444,8 +444,12 @@
             
             // Tjek antal af kendte værdier
             const knownValuesCount = [voltage, current, resistiveCurrent, resistance, capacitance, inductance, impedance].filter(v => v > 0).length;
-            if (frequency <= 0 || knownValuesCount < 2) {
-                displayResults(`<p><strong>Fejl:</strong> Indtast venligst frekvens, og mindst to andre værdier (spænding, strøm, modstand, osv.).</p>`);
+            if (frequency <= 0) {
+                 displayResults(`<p><strong>Fejl:</strong> Frekvens skal indtastes.</p>`);
+                 return;
+            }
+            if (knownValuesCount < 2) {
+                displayResults(`<p><strong>Fejl:</strong> Indtast mindst to værdier (spænding, strøm, modstand, osv.).</p>`);
                 return;
             }
             
@@ -531,72 +535,99 @@
 
         // Generel beregning for parallelkredsløb
         function calculateParallelRLC() {
-            const { voltage, current, resistiveCurrent, resistance, capacitance, inductance, frequency, impedance } = getValues();
+            let { voltage, current, resistiveCurrent, resistance, capacitance, inductance, frequency, impedance } = getValues();
             
-            let calculatedVoltage = 0, calculatedCurrent = 0, iR = 0, iL = 0, iC = 0, xL = 0, xC = 0;
-            let finalImpedance = 0;
+            // Brug en "solver" til at finde de ukendte værdier
+            for (let i = 0; i < 10; i++) { // Løb 10 gange for at sikre konvergens
+                const knownCount = [voltage, current, resistiveCurrent, resistance, capacitance, inductance, impedance].filter(v => v > 0).length;
+                if (knownCount > 6) break; // Stop hvis næsten alt er kendt
 
-            const givenU = voltage > 0;
-            const givenIR = resistiveCurrent > 0;
-            const givenI = current > 0;
-            const givenR = resistance > 0;
-            const givenL = inductance > 0;
-            const givenC = capacitance > 0;
-            const givenZ = impedance > 0;
-
-            // Første prioritet: Beregn ud fra spænding (U) og/eller virkestrøm (IR) og modstand (R)
-            if (givenU && givenIR) {
-                calculatedVoltage = voltage;
-                iR = resistiveCurrent;
-                const calculatedR = calculatedVoltage / iR;
+                // Beregn modstand og reaktans fra L/C og frekvens
+                const xL = inductance > 0 ? 2 * Math.PI * frequency * inductance : 0;
+                const xC = capacitance > 0 ? 1 / (2 * Math.PI * frequency * capacitance) : 0;
                 
-                // Brug den oplyste impedans (Z) til at finde den totale strøm (I)
-                calculatedCurrent = givenZ ? calculatedVoltage / impedance : 0;
+                // Prioritér strømme/spændinger baseret på indtastet data
+                if (resistance > 0 && voltage > 0) { resistiveCurrent = voltage / resistance; }
+                if (inductance > 0 && voltage > 0) { current = Math.sqrt(Math.pow(voltage/resistance,2) + Math.pow(voltage/xL,2)); }
+                if (capacitance > 0 && voltage > 0) { current = Math.sqrt(Math.pow(voltage/resistance,2) + Math.pow(voltage/xC,2)); }
                 
-                // Beregn reaktiv strøm (IL) fra I og IR
-                if (calculatedCurrent > iR) {
-                    const iReactive = Math.sqrt(Math.pow(calculatedCurrent, 2) - Math.pow(iR, 2));
-                    // I et RL kredsløb er reaktiv strøm kun fra spolen
-                    iL = iReactive;
-                } else {
-                    displayResults(`<p><strong>Fejl:</strong> Virkestrøm (IR) er større end total strøm (I), hvilket er matematisk umuligt.</p>`);
-                    return;
+                if (voltage > 0 && resistiveCurrent > 0 && resistance <= 0) { resistance = voltage / resistiveCurrent; }
+                if (voltage > 0 && current > 0 && impedance <= 0) { impedance = voltage / current; }
+                if (current > 0 && impedance > 0 && voltage <= 0) { voltage = current * impedance; }
+                if (resistance > 0 && impedance > 0 && current <= 0) {
+                     const conductance = 1 / resistance;
+                     const totalSusceptance = 1 / impedance;
+                     if (totalSusceptance > conductance) {
+                        const reactiveSusceptance = Math.sqrt(Math.pow(totalSusceptance, 2) - Math.pow(conductance, 2));
+                        if (inductance > 0) { xL = 1 / reactiveSusceptance; }
+                        if (capacitance > 0) { xC = 1 / reactiveSusceptance; }
+                     }
                 }
                 
-                // Beregn XL og L
-                xL = iL > 0 ? calculatedVoltage / iL : 0;
-                // Beregn L fra XL og frekvens
-                if (xL > 0 && frequency > 0) {
-                    inductance = xL / (2 * Math.PI * frequency);
+                 // Beregn total strøm fra delstrømme
+                let iR = 0, iL = 0, iC = 0;
+                if (voltage > 0) {
+                    if (resistance > 0) iR = voltage / resistance;
+                    if (xL > 0) iL = voltage / xL;
+                    if (xC > 0) iC = voltage / xC;
+                    current = Math.sqrt(Math.pow(iR, 2) + Math.pow(iL - iC, 2));
                 }
 
-                // Beregn Z ud fra de fundne værdier til sammenligning
-                const conductance = 1 / calculatedR;
-                const inductiveSusceptance = 1 / xL;
-                const totalAdmittance = Math.sqrt(Math.pow(conductance, 2) + Math.pow(inductiveSusceptance, 2));
-                finalImpedance = totalAdmittance > 0 ? 1 / totalAdmittance : 0;
+                // Beregn impedans fra strømme og spænding
+                if (voltage > 0 && current > 0) { impedance = voltage / current; }
 
-            } else {
-                // Her kan du tilføje logik for andre scenarier, f.eks. kun med I og Z
-                // For nu antager vi, at U og/eller IR er kendt, og sender en fejlbesked hvis det ikke er tilfældet
-                displayResults(`<p><strong>Fejl:</strong> For at beregne et parallel RL-kredsløb, skal du indtaste enten Spænding (U) og/eller Virkestrøm ($I_R$) plus Modstand (R) eller Impedans (Z).</p>`);
-                return;
+                // Beregn L og C fra reaktans
+                if (xL > 0 && frequency > 0) { inductance = xL / (2 * Math.PI * frequency); }
+                if (xC > 0 && frequency > 0) { capacitance = 1 / (2 * Math.PI * frequency * xC); }
             }
-
-            // Beregn resterende værdier
-            const calculatedResistance = calculatedVoltage / iR;
-            const realPower = calculatedVoltage * iR;
-            const apparentPower = calculatedVoltage * calculatedCurrent;
-            const reactivePower = Math.abs(calculatedVoltage * (iL - iC));
+            
+            // Genberegn alle værdier efter "solveren" har kørt
+            const xL = inductance > 0 ? 2 * Math.PI * frequency * inductance : 0;
+            const xC = capacitance > 0 ? 1 / (2 * Math.PI * frequency * capacitance) : 0;
+            
+            let iR = 0, iL = 0, iC = 0;
+            if (voltage > 0) {
+                if (resistance > 0) iR = voltage / resistance;
+                if (xL > 0) iL = voltage / xL;
+                if (xC > 0) iC = voltage / xC;
+            } else if (current > 0 && resistance > 0 && (inductance > 0 || capacitance > 0)) {
+                 // Tilfælde hvor kun I, R, og enten L eller C er kendt
+                 // Løs for U og I_R via impedansberegning
+                 const conductance = 1 / resistance;
+                 const inductiveSusceptance = xL > 0 ? 1 / xL : 0;
+                 const capacitiveSusceptance = xC > 0 ? 1 / xC : 0;
+                 const totalSusceptance = inductiveSusceptance - capacitiveSusceptance;
+                 const totalAdmittance = Math.sqrt(Math.pow(conductance, 2) + Math.pow(totalSusceptance, 2));
+                 impedance = totalAdmittance > 0 ? 1 / totalAdmittance : 0;
+                 voltage = current * impedance;
+                 iR = voltage / resistance;
+                 if (xL > 0) iL = voltage / xL;
+                 if (xC > 0) iC = voltage / xC;
+            } else {
+                 // Hvis ingen U er kendt, og vi ikke kan beregne den, skal vi bruge de kendte strømme
+                 if (resistance > 0) { iR = resistiveCurrent; }
+                 if (inductance > 0 && xL > 0) { iL = (current > 0 && resistiveCurrent > 0) ? Math.sqrt(Math.pow(current, 2) - Math.pow(resistiveCurrent, 2)) : 0; }
+                 if (capacitance > 0 && xC > 0) { iC = (current > 0 && resistiveCurrent > 0) ? Math.sqrt(Math.pow(current, 2) - Math.pow(resistiveCurrent, 2)) : 0; }
+                 // U = IR * R, hvis R er kendt
+                 if (iR > 0 && resistance > 0) { voltage = iR * resistance; }
+            }
+            
+            // Endelige beregninger
+            current = Math.sqrt(Math.pow(iR, 2) + Math.pow(iL - iC, 2));
+            if (current > 0) { impedance = voltage / current; }
+            
+            const realPower = voltage * iR;
+            const apparentPower = voltage * current;
+            const reactivePower = Math.abs(voltage * (iL - iC));
             const powerFactor = apparentPower > 0 ? realPower / apparentPower : 0;
             
             let phaseAngleDeg = 0;
             if (iR !== 0) {
-                phaseAngleDeg = Math.atan((iL - iC) / iR) * (180 / Math.PI);
+                phaseAngleDeg = Math.atan((iC - iL) / iR) * (180 / Math.PI);
             } else if (iL > iC) {
-                phaseAngleDeg = 90;
-            } else if (iC > iL) {
                 phaseAngleDeg = -90;
+            } else if (iC > iL) {
+                phaseAngleDeg = 90;
             }
 
             let resultOutput = `
@@ -605,25 +636,26 @@
                     
                     <h4>Beregnet reaktans og delstrømme:</h4>
                     <ul class="result-list">
+                        <li><strong>Modstand:</strong> $R = \\frac{U}{I_R} = ${formatValue(resistance, 'Ohm')}$</li>
+                        <li><strong>Induktiv reaktans:</strong> $X_L = 2\\pi f L = ${formatValue(xL, 'Ohm')}$</li>
                         <li><strong>Kapacitiv reaktans:</strong> $X_C = \\frac{1}{2\\pi f C} = ${formatValue(xC, 'Ohm')}$</li>
-                        <li><strong>Induktiv reaktans:</strong> $X_L = \\frac{U}{I_L} = ${formatValue(xL, 'Ohm')}$</li>
                         <li><strong>Strøm gennem R:</strong> $I_R = \\frac{U}{R} = ${formatValue(iR, 'A')}$</li>
-                        <li><strong>Strøm gennem L:</strong> $I_L = \\sqrt{I^2 - I_R^2} = ${formatValue(iL, 'A')}$</li>
+                        <li><strong>Strøm gennem L:</strong> $I_L = \\frac{U}{X_L} = ${formatValue(iL, 'A')}$</li>
                         <li><strong>Strøm gennem C:</strong> $I_C = \\frac{U}{X_C} = ${formatValue(iC, 'A')}$</li>
                     </ul>
 
                     <h4>Endelige resultater:</h4>
                     <ul class="result-list">
-                        <li><strong>Modstand:</strong> $R = \\frac{U}{I_R} = ${formatValue(calculatedResistance, 'Ohm')}$</li>
                         <li><strong>Induktans:</strong> $L = \\frac{X_L}{2\\pi f} = ${formatValue(inductance, 'H')}$</li>
-                        <li><strong>Total impedans:</strong> $Z = \\frac{1}{\\sqrt{(\\frac{1}{R})^2 + (\\frac{1}{X_L})^2}} = ${formatValue(finalImpedance, 'Ohm')}$</li>
-                        <li><strong>Total strøm:</strong> $I = \\frac{U}{Z} = ${formatValue(calculatedCurrent, 'A')}$</li>
-                        <li><strong>Total spænding:</strong> $U = I \\cdot Z = ${formatValue(calculatedVoltage, 'V')}$</li>
-                        <li><strong>Faseforskydningsvinkel:</strong> $\\phi = \\arctan(\\frac{I_L - I_C}{I_R}) = ${phaseAngleDeg.toFixed(3)} °$</li>
+                        <li><strong>Kapacitans:</strong> $C = \\frac{1}{2\\pi f X_C} = ${formatValue(capacitance, 'F')}$</li>
+                        <li><strong>Total impedans:</strong> $Z = \\frac{U}{I} = ${formatValue(impedance, 'Ohm')}$</li>
+                        <li><strong>Total strøm:</strong> $I = \\sqrt{I_R^2 + (I_C - I_L)^2} = ${formatValue(current, 'A')}$</li>
+                        <li><strong>Total spænding:</strong> $U = I \\cdot Z = ${formatValue(voltage, 'V')}$</li>
+                        <li><strong>Faseforskydningsvinkel:</strong> $\\phi = \\arctan(\\frac{I_C - I_L}{I_R}) = ${phaseAngleDeg.toFixed(3)} °$</li>
                         <li><strong>Effektfaktor:</strong> $\\cos(\\phi) = \\frac{I_R}{I} = ${powerFactor.toFixed(3)}$</li>
                         <li><strong>Nytteeffekt:</strong> $P = U \\cdot I_R = ${formatValue(realPower, 'W')}$</li>
                         <li><strong>Tilsyneladende effekt:</strong> $S = U \\cdot I = ${formatValue(apparentPower, 'VA')}$</li>
-                        <li><strong>Reaktiv effekt:</strong> $Q = U \\cdot I_L = ${formatValue(reactivePower, 'var')}$</li>
+                        <li><strong>Reaktiv effekt:</strong> $Q = U \\cdot (I_L - I_C) = ${formatValue(reactivePower, 'var')}$</li>
                     </ul>
                 </div>
             `;
