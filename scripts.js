@@ -215,7 +215,8 @@ function calculateSeriesRLC() {
         resultOutput += `•  Total strøm (I): I = U / Z\n`;
     } else {
         resultOutput += `•  Total spænding (U): U = I * Z\n`;
-    Output += `•  Spændingsfald over R (Ur): Ur = I * R\n`;
+    }
+    resultOutput += `•  Spændingsfald over R (Ur): Ur = I * R\n`;
     resultOutput += `•  Spændingsfald over L (Ul): Ul = I * Xl\n`;
     resultOutput += `•  Spændingsfald over C (Uc): Uc = I * Xc\n`;
     resultOutput += `•  Nytteeffekt (P): P = I^2 * R\n`;
@@ -364,7 +365,7 @@ function calculateParallelRLC() {
     resultOutput += `•  Effektfaktor (cos φ): ${powerFactor.toFixed(3)}\n`;
     resultOutput += `•  Nytteeffekt (P): ${formatValue(realPower, 'W')}\n`;
     resultOutput += `•  Tilsyneladende effekt (S): ${formatValue(apparentPower, 'VA')}\n`;
-sultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
+    resultOutput += `•  Reaktiv effekt (Q): ${formatValue(reactivePower, 'var')}\n`;
     
     document.getElementById('result').textContent = resultOutput;
 }
