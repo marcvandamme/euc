@@ -149,6 +149,17 @@
             }
         }
     </style>
+    
+    <!-- Explicit MathJax configuration -->
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+            tex2jax: {
+                inlineMath: [['$','$'], ["\\(","\\)"]],
+                displayMath: [['$$','$$'], ["\\[","\\]"]],
+                processEscapes: true
+            }
+        });
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
@@ -350,9 +361,9 @@
             resultBox.innerHTML = htmlContent;
             
             // Kør MathJax efter, at DOM'en er opdateret
-            MathJax.typesetPromise().then(() => {
-                console.log("MathJax typeset completed.");
-            }).catch((err) => console.error("MathJax typesetting failed: ", err));
+            if (window.MathJax) {
+                MathJax.Hub.Queue(["Typeset", MathJax.Hub, resultBox]);
+            }
         }
 
         // Hovedfunktion, der opdaterer lommeregneren baseret på kredsløbstype
