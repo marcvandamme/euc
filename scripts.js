@@ -112,21 +112,19 @@ function getValues() {
         capacitance: parseValue(document.getElementById('capacitance').value).value,
         inductance: parseValue(document.getElementById('inductance').value).value,
         impedance: parseValue(document.getElementById('impedance').value).value,
-        power: parseValue(document.getElementById('power').value).value,
         isLReactance: parseValue(document.getElementById('inductance').value).isLReactance,
         isCReactance: parseValue(document.getElementById('capacitance').value).isCReactance,
         isImpedance: parseValue(document.getElementById('impedance').value).isImpedance,
-        isPower: parseValue(document.getElementById('power').value).isPower,
     };
 }
 
 // Hovedfunktion, der opdaterer lommeregneren baseret på kredsløbstype
 function updateCalculator() {
-    const { voltage, current, frequency, resistance, capacitance, inductance, impedance, power } = getValues();
+    const { voltage, current, frequency, resistance, capacitance, inductance, impedance } = getValues();
     const resultBox = document.getElementById('result');
     
     // Fejlhåndtering for grundlæggende input
-    const knownValuesCount = [voltage, current, resistance, capacitance, inductance, impedance, power].filter(v => v > 0).length;
+    const knownValuesCount = [voltage, current, resistance, capacitance, inductance, impedance].filter(v => v > 0).length;
     if (frequency <= 0 || knownValuesCount < 2) {
         resultBox.innerHTML = `<p><strong>Fejl:</strong> Indtast venligst frekvens, og mindst to andre værdier.</p>`;
         return;
@@ -149,7 +147,7 @@ function updateCalculator() {
 
 // Nulstiller alle inputfelter og resultatvisningen
 function resetCalculator() {
-    const inputs = ['voltage', 'current', 'frequency', 'resistance', 'capacitance', 'inductance', 'impedance', 'power'];
+    const inputs = ['voltage', 'current', 'frequency', 'resistance', 'capacitance', 'inductance', 'impedance'];
     inputs.forEach(id => {
         document.getElementById(id).value = '';
     });
