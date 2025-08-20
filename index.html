@@ -475,15 +475,15 @@
             let { voltage, current, frequency, resistance, capacitance, inductance, impedance, xl, xc } = values;
             
             // Prioriter indtastede reaktansværdier for baglæns beregning
-            if (xl > 0) {
+            if (xl > 0 && frequency > 0) {
                 inductance = xl / (2 * Math.PI * frequency);
-            } else if (inductance > 0) {
+            } else if (inductance > 0 && frequency > 0) {
                 xl = 2 * Math.PI * frequency * inductance;
             }
 
-            if (xc > 0) {
+            if (xc > 0 && frequency > 0) {
                 capacitance = 1 / (2 * Math.PI * frequency * xc);
-            } else if (capacitance > 0) {
+            } else if (capacitance > 0 && frequency > 0) {
                 xc = 1 / (2 * Math.PI * frequency * capacitance);
             }
             
@@ -555,23 +555,26 @@
             let { voltage, current, resistiveCurrent, resistance, capacitance, inductance, frequency, impedance, xl, xc } = values;
 
             // Prioriter indtastede reaktansværdier for baglæns beregning
-            if (xl > 0) {
+            if (xl > 0 && frequency > 0) {
                 inductance = xl / (2 * Math.PI * frequency);
-            } else if (inductance > 0) {
+            } else if (inductance > 0 && frequency > 0) {
                 xl = 2 * Math.PI * frequency * inductance;
             }
 
-            if (xc > 0) {
+            if (xc > 0 && frequency > 0) {
                 capacitance = 1 / (2 * Math.PI * frequency * xc);
-            } else if (capacitance > 0) {
+            } else if (capacitance > 0 && frequency > 0) {
                 xc = 1 / (2 * Math.PI * frequency * capacitance);
             }
             
             // Bestem impedans Z
             if (impedance === 0) {
-                 // For parallelle kredsløb er den totale impedans: 1/Z = sqrt((1/R)^2 + (1/Xl - 1/Xc)^2)
-                 const totalAdmittance = Math.sqrt(Math.pow(1/resistance, 2) + Math.pow(1/xl - 1/xc, 2));
-                 impedance = 1 / totalAdmittance;
+                 // Rettelse: Håndter division med nul
+                 const conductiveAdmittance = (resistance > 0) ? 1 / resistance : 0;
+                 const inductiveAdmittance = (xl > 0) ? 1 / xl : 0;
+                 const capacitiveAdmittance = (xc > 0) ? 1 / xc : 0;
+                 const totalAdmittance = Math.sqrt(Math.pow(conductiveAdmittance, 2) + Math.pow(inductiveAdmittance - capacitiveAdmittance, 2));
+                 impedance = (totalAdmittance > 0) ? 1 / totalAdmittance : 0;
             }
 
             let calculatedCurrent = 0;
@@ -581,17 +584,17 @@
 
             if (voltage > 0) {
                 // Hvis spænding er kendt, beregn strømme
-                iR = voltage / resistance;
-                iL = voltage / xl;
-                iC = voltage / xc;
+                iR = (resistance > 0) ? voltage / resistance : 0;
+                iL = (xl > 0) ? voltage / xl : 0;
+                iC = (xc > 0) ? voltage / xc : 0;
                 calculatedCurrent = Math.sqrt(Math.pow(iR, 2) + Math.pow(iL - iC, 2));
             } else if (current > 0) {
                  // Hvis total strøm er kendt, beregn spænding og andre strømme
                  const totalAdmittance = 1 / impedance;
                  voltage = current / totalAdmittance;
-                 iR = voltage / resistance;
-                 iL = voltage / xl;
-                 iC = voltage / xc;
+                 iR = (resistance > 0) ? voltage / resistance : 0;
+                 iL = (xl > 0) ? voltage / xl : 0;
+                 iC = (xc > 0) ? voltage / xc : 0;
                  calculatedCurrent = current;
             } else {
                 // Fejlhåndtering
@@ -611,8 +614,8 @@
                 const iReactive = Math.sqrt(iReactiveSquared);
                 iL = iReactive; // Antager induktivt kredsløb
                 iC = 0;
-                xl = voltage / iL;
-                inductance = xl / (2 * Math.PI * frequency);
+                xl = (iL > 0) ? voltage / iL : 0;
+                inductance = (xl > 0) ? xl / (2 * Math.PI * frequency) : 0;
             }
 
             const realPower = voltage * iR;
